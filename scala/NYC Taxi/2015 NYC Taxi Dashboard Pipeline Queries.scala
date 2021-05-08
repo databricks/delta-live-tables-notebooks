@@ -88,7 +88,7 @@ dbutils.fs.rm("/user/denny.lee/nyctaxi/nyctaxi_greencab_origin", recurse=true)
 // MAGIC );
 // MAGIC 
 // MAGIC -- Optimize table
-// MAGIC OPTIMIZE DAIS21.nyctaxi_greencab_raw;
+// MAGIC OPTIMIZE DAIS21.nyctaxi_greencab_origin;
 
 // COMMAND ----------
 
@@ -117,7 +117,7 @@ dbutils.fs.rm("/user/denny.lee/nyctaxi/nyctaxi_greencab_source", recurse=true)
 // MAGIC LOCATION "/user/denny.lee/nyctaxi/nyctaxi_greencab_source"
 // MAGIC AS (
 // MAGIC SELECT *
-// MAGIC   FROM DAIS21.nyctaxi_greencab_raw
+// MAGIC   FROM DAIS21.nyctaxi_greencab_origin
 // MAGIC  WHERE DATE(lpep_dropoff_datetime) = "2015-03-01"
 // MAGIC ) 
 
