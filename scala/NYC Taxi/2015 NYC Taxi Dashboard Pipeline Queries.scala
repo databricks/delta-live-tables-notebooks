@@ -123,6 +123,10 @@ dbutils.fs.rm("/user/denny.lee/nyctaxi/nyctaxi_greencab_source", recurse=true)
 
 // COMMAND ----------
 
+dbutils.notebook.exit("Stop the notebook")
+
+// COMMAND ----------
+
 // MAGIC %md ### You can now run the *2015 NYCTaxi Dashboard Pipeline* IF ...
 // MAGIC ** you also generated the `map_point2Location` table per this [GeoMesa + H3 Notebook notebook]($./GeoMesa + H3 Notebook) notebook **
 

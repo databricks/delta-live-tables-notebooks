@@ -194,17 +194,16 @@ display(dfWithBoroughH3.select("zone","borough","dropoff_point","dropoff_longitu
 // COMMAND ----------
 
 val map_pointToLocation = dfWithBoroughH3
-//  .select("zone","borough","dropoff_point","dropoff_longitude", "dropoff_latitude", "lpep_dropoff_datetime","h3index")
-  .select("zone","borough","dropoff_longitude", "dropoff_latitude", "lpep_dropoff_datetime","h3index")
+  .select("zone","borough","dropoff_longitude", "dropoff_latitude", "lpep_dropoff_datetime", "h3index")
 
 // COMMAND ----------
 
-// dbutils.fs.rm("/user/denny.lee/nyctaxi/map_pointToLocation", recurse=true)
+// dbutils.fs.rm("/user/denny.lee/nyctaxi/map_point2Location", recurse=true)
 
 // COMMAND ----------
 
 // Save table
-map_pointToLocation.write.format("delta").save("/user/denny.lee/nyctaxi/map_pointToLocation")
+map_pointToLocation.write.format("delta").save("/user/denny.lee/nyctaxi/map_point2Location")
 
 // COMMAND ----------
 
