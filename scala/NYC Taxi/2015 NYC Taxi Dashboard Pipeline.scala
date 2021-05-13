@@ -155,7 +155,6 @@ class NYCTaxiPipeline extends Pipeline with Implicits {
   //
   // Event Log Tables
   //
-  // Uncomment after running 2nd run
   createTable("expectations_log")
     .query {
         val pipelinesId = spark.conf.get("pipelines.id")

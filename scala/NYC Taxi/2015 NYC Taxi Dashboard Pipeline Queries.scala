@@ -142,8 +142,8 @@ dbutils.notebook.exit("Stop the notebook")
 // MAGIC INSERT INTO DAIS21.nyctaxi_greencab_source
 // MAGIC SELECT *
 // MAGIC   FROM DAIS21.nyctaxi_greencab_origin
-// MAGIC  WHERE DATE(lpep_dropoff_datetime) = "2015-03-02"
-// MAGIC --  WHERE DATE(lpep_dropoff_datetime) = "2015-03-03"
+// MAGIC -- WHERE DATE(lpep_dropoff_datetime) = "2015-03-02"
+// MAGIC  WHERE DATE(lpep_dropoff_datetime) = "2015-03-03"
 // MAGIC --  WHERE DATE(lpep_dropoff_datetime) = "2015-03-04"
 // MAGIC --  WHERE DATE(lpep_dropoff_datetime) = "2015-03-05"
 // MAGIC --  WHERE DATE(lpep_dropoff_datetime) = "2015-03-06"
