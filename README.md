@@ -10,20 +10,18 @@
 
 ## Getting Started
 
-### 1. Connect to this repo:
-Connect your Databricks workspace using the *Repos* feature to [this repo
+* Connect your Databricks workspace using the *Repos* feature to [this repo
 ](https://github.com/databricks/delta-live-tables-notebooks)
 
 <img src="https://databricks.com/wp-content/uploads/2021/05/repos.png" width="140"/>
 
+* Choose one of the examples and create your pipeline!
 
-### 2. Choose one of the examples and create your pipeline:
+## Examples
+### Loan Risk Analysis
 
 
-#### 2.1 Loan Risk Analysis
-
-
-#### 2.2 NYC Taxi 
+### NYC Taxi Dataset
 
 The NYC Taxi demo is available in `scala` and `python` to process the [NYC Taxi dataset](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page) specific to the year 2015.  The Python code generates the following pipeline in the form of a Delta medallion architecture ala bronze (BZ), silver (Ag), and gold (Au) data quality layers. 
 
@@ -32,7 +30,7 @@ The NYC Taxi demo is available in `scala` and `python` to process the [NYC Taxi 
 
 You can modify the pipeline to process all of the data but for this demo, we restricted it to 2015 because it was the most recent year of data that contained  pickup and dropoff longitude and latitude points.  This data is used in the following **2015 NYC Taxi Dashboard with Expectations**.
 
-<img src="images/2015-nyctaxi-dashboard-with-expectations.gif" width=600/>
+<img src="images/2015-nyctaxi-dashboard-with-expectations.gif" width=800/>
 
 
 - Put steps on how to run a simple example (perhaps boston housing demo)
