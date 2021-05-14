@@ -10,7 +10,7 @@
 
 ## Getting Started
 
-* Connect your Databricks workspace using the *Repos* <img src="https://databricks.com/wp-content/uploads/2021/05/repos.png" width="140"/> feature to [this repo](https://github.com/databricks/delta-live-tables-notebooks)
+* Connect your Databricks workspace using the <img src="https://databricks.com/wp-content/uploads/2021/05/repos.png" width="140" style=" vertical-align:middle"/> feature to [this repo](https://github.com/databricks/delta-live-tables-notebooks)
 
 * Choose one of the examples and create your pipeline!
 
