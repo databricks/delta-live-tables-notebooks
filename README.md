@@ -5,7 +5,8 @@
   <strong>Delta Live Tables</strong> is a new framework designed to enable customers to successfully declaratively define, deploy, test & upgrade data pipelines and eliminate operational burdens associated with the management of such pipelines.
 </p>
 <p align="center">
-  This repo contains Delta Live Table examples designed to get customers started with building, deploying and running pipelines.
+  This repo contains Delta Live Table examples designed to get customers started with
+  building, deploying and running pipelines.
 </p>
 
 ## Getting Started
@@ -16,6 +17,13 @@
 
 ## Examples
 ### Loan Risk Analysis
+
+This Loan Risk Analysis pipeline sample is based on the [Loan Risk Analysis with XGBoost and Databricks Runtime for Machine Learning](https://databricks.com/blog/2018/08/09/loan-risk-analysis-with-xgboost-and-databricks-runtime-for-machine-learning.html).  This pipelne is in two parts:
+1. The [Loan Risk Pipeline]() Delta Live Tables notebook is a sample Delta medallion architecture ala bronze (BZ), silver (Ag), and gold (Au) data quality layers.  It processes the loan risk data through multiple transformations and two gold tables.  The pipeline also runs a pyspark logistic regression ML pipeline to predict bad loans based on this data.
+
+ <img src="images/Loan Risk Pipeline.png" width=500>
+
+1. The [Loan Risk Analysis]() notebook produces a number of graphs as well as executes a ML pipeline for better loan risk predictions.
 
 
 ### NYC Taxi Dataset
@@ -30,9 +38,9 @@ You can modify the pipeline to process all of the data but for this demo, we res
 <img src="images/2015-nyctaxi-dashboard-with-expectations.gif" width=800/>
 
 To run this demo, please run the following steps:
-1. Run the [GeoMesa + H3 Notebook](scala/NYC Taxi/GeoMesa + H3 Notebook.scala) to create the `map_point2Location` table that maps the latitude and longitude data into NYC borough information.  Note and/or modify the location of the data in the last cell of this notebook.    This is a modified version of the notebook from the blog [Processing Geospatial Data at Scale With Databricks](https://databricks.com/blog/2019/12/05/processing-geospatial-data-at-scale-with-databricks.html).
+1. Run the [GeoMesa + H3 Notebook](https://github.com/databricks/delta-live-tables-notebooks/blob/main/scala/NYC%20Taxi/GeoMesa%20%2B%20H3%20Notebook.scala) to create the `map_point2Location` table that maps the latitude and longitude data into NYC borough information.  Note and/or modify the location of the data in the last cell of this notebook.    This is a modified version of the notebook from the blog [Processing Geospatial Data at Scale With Databricks](https://databricks.com/blog/2019/12/05/processing-geospatial-data-at-scale-with-databricks.html).
 
-1. Run the first three *stages* of the [2015 NYC Taxi Dashboard Pipeline Queries](scala/NYC Taxi/2015 NYC Taxi Dashboard Pipeline Queries.scala) notebook.  It will create the source table `DAIS21.nyctaxi_greencab_source` with one day of data.  It also creates the origin table `DAIS21.nyctaxi_greencab_origin` which you can use to load more data into the source table that the pipeline will read.   When you need to load new data, modify and run the **3. Load Data** cell.  
+1. Run the first three *stages* of the [2015 NYC Taxi Dashboard Pipeline Queries](https://github.com/databricks/delta-live-tables-notebooks/blob/main/scala/NYC%20Taxi/2015%20NYC%20Taxi%20Dashboard%20Pipeline%20Queries.scala) notebook.  It will create the source table `DAIS21.nyctaxi_greencab_source` with one day of data.  It also creates the origin table `DAIS21.nyctaxi_greencab_origin` which you can use to load more data into the source table that the pipeline will read.   When you need to load new data, modify and run the **3. Load Data** cell.  
 
 1. Create your pipeline using the following parameters:
    * From your Databricks workspace, click **Jobs** and then **Pipelines**; click on **Create Pipeline**
