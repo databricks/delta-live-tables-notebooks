@@ -21,9 +21,23 @@
 This Loan Risk Analysis pipeline sample is based on the [Loan Risk Analysis with XGBoost and Databricks Runtime for Machine Learning](https://databricks.com/blog/2018/08/09/loan-risk-analysis-with-xgboost-and-databricks-runtime-for-machine-learning.html).  This pipelne is in two parts:
 1. The [Loan Risk Pipeline]() Delta Live Tables notebook is a sample Delta medallion architecture ala bronze (BZ), silver (Ag), and gold (Au) data quality layers.  It processes the loan risk data through multiple transformations and two gold tables.  The pipeline also runs a pyspark logistic regression ML pipeline to predict bad loans based on this data.
 
- <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/Loan%20Risk%20Pipeline.png" width=500>
+ <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/Loan%20Risk%20Pipeline.png" width=400>
 
-1. The [Loan Risk Analysis]() notebook produces a number of graphs as well as executes a ML pipeline for better loan risk predictions.
+2. The [Loan Risk Analysis]() notebook produces a number of graphs as well as executes a ML pipeline for better loan risk predictions.
+
+ <img src="https://databricks.com/wp-content/uploads/2018/08/Screen-Shot-2018-08-09-at-3.13.56-AM.png" width=600>
+
+3. Create your pipeline using the following parameters:
+   * From your Databricks workspace, click **Jobs** and then **Pipelines**; click on **Create Pipeline**
+   * Fill in the **Pipeline Name**, e.g. `Loan Risk Pipeline`
+   * For the **Notebook Path**, fill in the path of the notebook.  
+      * The Python notebook can be found at: `python/Loan Risk Analysis/Loan Risk Pipeline.py`
+      * You can also get the notebook path using this command: `dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()`
+   * Modify the `database_name` parameter (e.g. `database_name = "loan.risk"`)  
+
+4. Click **Start**
+
+5. Once your pipeline has finished, you can view the results using the *Loan Risk Analysis* notebook.
 
 
 ### NYC Taxi Dataset
