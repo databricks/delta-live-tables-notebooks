@@ -21,7 +21,7 @@
 This Loan Risk Analysis pipeline sample is based on the [Loan Risk Analysis with XGBoost and Databricks Runtime for Machine Learning](https://databricks.com/blog/2018/08/09/loan-risk-analysis-with-xgboost-and-databricks-runtime-for-machine-learning.html).  This pipelne is in two parts:
 1. The [Loan Risk Pipeline]() Delta Live Tables notebook is a sample Delta medallion architecture ala bronze (BZ), silver (Ag), and gold (Au) data quality layers.  It processes the loan risk data through multiple transformations and two gold tables.  The pipeline also runs a pyspark logistic regression ML pipeline to predict bad loans based on this data.
 
- <img src="images/Loan Risk Pipeline.png" width=500>
+ <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/Loan%20Risk%20Pipeline.png" width=500>
 
 1. The [Loan Risk Analysis]() notebook produces a number of graphs as well as executes a ML pipeline for better loan risk predictions.
 
@@ -30,12 +30,12 @@ This Loan Risk Analysis pipeline sample is based on the [Loan Risk Analysis with
 
 The NYC Taxi demo is available in `scala` and `python` to process the [NYC Taxi dataset](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page) specific to the year 2015.  The Python code generates the following pipeline in the form of a Delta medallion architecture ala bronze (BZ), silver (Ag), and gold (Au) data quality layers. 
 
-<img src="images/2015 NYCTaxi Dashboard Pipeline (BZ-AG-AU).png" width=600>
+<img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/2015%20NYCTaxi%20Dashboard%20Pipeline%20(BZ-AG-AU).png" width=600>
 
 
 You can modify the pipeline to process all of the data but for this demo, we restricted it to 2015 because it was the most recent year of data that contained  pickup and dropoff longitude and latitude points.  This data is used in the following **2015 NYC Taxi Dashboard with Expectations**.
 
-<img src="images/2015-nyctaxi-dashboard-with-expectations.gif" width=800/>
+<img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/2015-nyctaxi-dashboard-with-expectations.gif" width=700/>
 
 To run this demo, please run the following steps:
 1. Run the [GeoMesa + H3 Notebook](https://github.com/databricks/delta-live-tables-notebooks/blob/main/scala/NYC%20Taxi/GeoMesa%20%2B%20H3%20Notebook.scala) to create the `map_point2Location` table that maps the latitude and longitude data into NYC borough information.  Note and/or modify the location of the data in the last cell of this notebook.    This is a modified version of the notebook from the blog [Processing Geospatial Data at Scale With Databricks](https://databricks.com/blog/2019/12/05/processing-geospatial-data-at-scale-with-databricks.html).
