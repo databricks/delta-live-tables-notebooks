@@ -10,20 +10,15 @@
 
 ## Getting Started
 
-#### 1. Connect to this repo:
-Connect your Databricks workspace using the *Repos* feature to [this repo
-](https://github.com/databricks/delta-live-tables-notebooks)
+* Connect your Databricks workspace using the <img src="https://databricks.com/wp-content/uploads/2021/05/repos.png" width="140" style=" vertical-align:middle"/> feature to [this repo](https://github.com/databricks/delta-live-tables-notebooks)
 
-<img src="https://databricks.com/wp-content/uploads/2021/05/repos.png" width="140"/>
+* Choose one of the examples and create your pipeline!
 
-
-#### 2. Choose one of the examples and create your pipeline:
+## Examples
+### Loan Risk Analysis
 
 
-##### 2.1 Loan Risk Analysis
-
-
-##### 2.2 NYC Taxi 
+### NYC Taxi Dataset
 
 The NYC Taxi demo is available in `scala` and `python` to process the [NYC Taxi dataset](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page) specific to the year 2015.  The Python code generates the following pipeline in the form of a Delta medallion architecture ala bronze (BZ), silver (Ag), and gold (Au) data quality layers. 
 
@@ -32,13 +27,31 @@ The NYC Taxi demo is available in `scala` and `python` to process the [NYC Taxi 
 
 You can modify the pipeline to process all of the data but for this demo, we restricted it to 2015 because it was the most recent year of data that contained  pickup and dropoff longitude and latitude points.  This data is used in the following **2015 NYC Taxi Dashboard with Expectations**.
 
-<img src="images/2015-nyctaxi-dashboard-with-expectations.gif" width=600/>
+<img src="images/2015-nyctaxi-dashboard-with-expectations.gif" width=800/>
 
+To run this demo, please run the following steps:
+1. Run the [GeoMesa + H3 Notebook](scala/NYC Taxi/GeoMesa + H3 Notebook.scala) to create the `map_point2Location` table that maps the latitude and longitude data into NYC borough information.  Note and/or modify the location of the data in the last cell of this notebook.    This is a modified version of the notebook from the blog [Processing Geospatial Data at Scale With Databricks](https://databricks.com/blog/2019/12/05/processing-geospatial-data-at-scale-with-databricks.html).
 
-- Put steps on how to run a simple example (perhaps boston housing demo)
-- create a pipeline to point to this notebook (create an animated GIF showing this)
-- Run the the example (show it running)
-- Show the output (create sample notebook to read it, fill in pipelines ID to read it)
+1. Run the first three *stages* of the [2015 NYC Taxi Dashboard Pipeline Queries](scala/NYC Taxi/2015 NYC Taxi Dashboard Pipeline Queries.scala) notebook.  It will create the source table `DAIS21.nyctaxi_greencab_source` with one day of data.  It also creates the origin table `DAIS21.nyctaxi_greencab_origin` which you can use to load more data into the source table that the pipeline will read.   When you need to load new data, modify and run the **3. Load Data** cell.  
+
+1. Create your pipeline using the following parameters:
+   * From your Databricks workspace, click **Jobs** and then **Pipelines**; click on **Create Pipeline**
+   * Fill in the **Pipeline Name**, e.g. `2015 NYC Taxi Dashboard Pipeline`
+   * For the **Notebook Path**, fill in the path of the notebook.  
+      * The Scala notebook can be found at: `scala/NYC Taxi/2015 NYC Taxi Dashboard Pipeline Queries.scala`
+      * The Python notebook can be found at: `python/NYC Taxi/2015 NYC Taxi Dashboard Pipeline (BZ-AG-AU).py`
+      * You can also get the notebook path using this command: `dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()`
+
+1. Click **Start**
+
+The following tables are created:
+* `DAIS21.bz_green_cab`: The bronze table that contains the Green Cab NYC Taxi data
+* `DAIS21.au_summary_stats`: Contains the gold table summary statistics
+* `DAIS21.au_payment_by_hour`: Contains the gold table payment by hour
+* `DAIS21.au_boroughs`: Contains the gold tqable of NYC boroughs
+* `DAIS21.expectations_log`: References the Delta Live Table data quality metrics
+
+The **2015 NYC Taxi Dashboard** queries the above listed tables; we will include the scripts for this dashboard soon.
 
 
 
