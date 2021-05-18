@@ -120,6 +120,7 @@ To do this, load the [Delta Live Tables > Wikipedia]() Python demo notebook and 
   ```
 
   Unsurprisingly, the top referrer is "Google" which you can see graphically when you convert your table into an area chart.
+  
   <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark-area-chart.png" width="600"/>
 
 Now that you are familar with this basic pipeline, let's go to our next pipeline to introduce expectations.
