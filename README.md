@@ -16,6 +16,121 @@
 * Choose one of the examples and create your pipeline!
 
 ## Examples
+### Wikipedia
+This wikipedia clickstream sample is a great way to jump start using Delta Live Tables (DLT).  It is a simple bificating pipeline that creates a view on your JSON data and then creates two tables for you.  
+
+<img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark.png" width="400"/>
+
+To do this, load the [Delta Live Tables > Wikipedia]() Python demo notebook and notice within the sample code the definition of a single view and two tables.
+
+#### Reviewing the notebook code
+
+**1. Define the `json_clickstream` view**
+
+  The following  create your temporary view of the clickstream data which is in JSON format 
+
+  ```
+  @create_view()              # Define your DLT view
+  def json_clickstream():     # Python function for this view
+    return (
+      # The data that makes the `json_clickstream` view
+      spark.read.json("/.../2015_2_clickstream.json")  
+    )
+  ```
+
+**2. Define the wiki_spark table**
+
+  Based on the Wikipedia February 2015 clickstream data, let's find all the occurences where the current title is "Apache Spark" (`curr_title = 'Apache_Spark'`) order by the number of occurences of the (referer, resource) pair (`n`).
+
+  ```
+  @create_table()           # Define your persistented DLT table* 
+  def wiki_spark():         # Python function for this table
+    return (
+      # Read the `json_clickstream` view you had previously defined
+      (read("json_clickstream")   
+        .withColumn("n", expr("CAST(n AS integer) AS n"))
+        .filter(expr("curr_title == 'Apache_Spark'"))
+        .sort(desc("n"))
+    )
+
+  * Note, you will need to set DLT pipeline `target` configuration settings for the table to persistent; more info 
+  ```
+
+**3. Define the wiki_top50 table**
+
+  Based on the Wikipedia February 2015 clickstream data, let's find the top 50 occurences 
+  ```
+  @create_table()         # Define your persistented DLT table* 
+  def wiki_top50():       # Python function fof this table
+    return (
+      # Read the `json_clickstream` view you had previously defined
+      (read("json_clickstream")
+        .groupBy("curr_title")
+        .agg(sum("n").alias("sum_n"))
+        .sort(desc("sum_n")).limit(50))
+    )
+  ```
+
+#### Running your pipeline
+
+**1. Create your pipeline using the following parameters**
+
+  * From your Databricks workspace, click **Jobs** and then **Pipelines**; click on **Create Pipeline**
+  * Fill in the **Pipeline Name**, e.g. `Wikipedia`
+  * For the **Notebook Path**, fill in the path of the notebook.  
+    * The Python notebook can be found at: `python/Wikipedia/Wikipedia Pipeline.py`
+    * You can also get the notebook path using this command: `dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()`
+
+**2. Edit your pipeline JSON**
+
+  Once you have setup your pipeline, click **Edit Settings** near the top, the JSON will look similar to below
+  ```
+  {
+    "id": "26827819-9d34-42ad-932c-5571e334e0c8",
+    "name": "Wikipedia",
+    "storage": "dbfs:/pipelines/26827819-9d34-42ad-932c-5571e334e0c8",
+    "libraries": [
+        {
+            "notebook": {
+                "path": "/Repos/.../DLT/Python/Wikipedia/Wikipedia Pipeline"
+            }
+        }
+    ],
+    "target": "wiki_demo",
+    "continuous": false
+  }
+  ```
+  To persist your tables, add the `target` parameter to specify which database you want to persist your tables, e.g. `wiki_demo`.
+
+**3. Click Start**
+
+  To view the progress of your pipeline, refer to the progress flow near the bottom of the pipeline details UI as noted in the following image. 
+
+  <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark-progress.png" width="500"/>
+
+
+**4. Reviewing the results**
+
+  Once your pipeline has completed processing, you can review the data by opening up a new Databricks notebook and running the following SQL statements:
+
+  ```
+  %sql
+  -- Review the top referrers to Wikipedia's Apache Spark articles
+  SELECT * FROM wiki_demo.wiki_spark
+  ```
+
+  Unsurprisingly, the top referrer is "Google" which you can see graphically when you convert your table into an area chart.
+  <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark-area-chart.png" width="600"/>
+
+Now that you are familar with this basic pipeline, let's go to our next pipeline to introduce expectations.
+
+
+### Flight Performance
+
+**TO DO**: Include flight performance basic pipeline with expectations
+
+
+
 ### Loan Risk Analysis
 
 This Loan Risk Analysis pipeline sample is based on the [Loan Risk Analysis with XGBoost and Databricks Runtime for Machine Learning](https://databricks.com/blog/2018/08/09/loan-risk-analysis-with-xgboost-and-databricks-runtime-for-machine-learning.html).  This pipelne is in two parts:
