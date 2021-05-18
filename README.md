@@ -9,21 +9,21 @@
   building, deploying and running pipelines.
 </p>
 
-## Getting Started
+# Getting Started
 
 * Connect your Databricks workspace using the <img src="https://databricks.com/wp-content/uploads/2021/05/repos.png" width="140" style=" vertical-align:middle"/> feature to [this repo](https://github.com/databricks/delta-live-tables-notebooks)
 
 * Choose one of the examples and create your pipeline!
 
-## Examples
-### Wikipedia
+# Examples
+## Wikipedia
 This wikipedia clickstream sample is a great way to jump start using Delta Live Tables (DLT).  It is a simple bificating pipeline that creates a view on your JSON data and then creates two tables for you.  
 
 <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark.png" width="400"/>
 
 To do this, load the [Delta Live Tables > Wikipedia]() Python demo notebook and notice within the sample code the definition of a single view and two tables.
 
-#### Reviewing the notebook code
+### Reviewing the notebook code
 
 **1. Define the `json_clickstream` view**
 
@@ -71,7 +71,7 @@ To do this, load the [Delta Live Tables > Wikipedia]() Python demo notebook and 
     )
   ```
 
-#### Running your pipeline
+### Running your pipeline
 
 **1. Create your pipeline using the following parameters**
 
@@ -125,13 +125,13 @@ To do this, load the [Delta Live Tables > Wikipedia]() Python demo notebook and 
 Now that you are familar with this basic pipeline, let's go to our next pipeline to introduce expectations.
 
 
-### Flight Performance
+## Flight Performance
 
 **TO DO**: Include flight performance basic pipeline with expectations
 
 
 
-### Loan Risk Analysis
+## Loan Risk Analysis
 
 This Loan Risk Analysis pipeline sample is based on the [Loan Risk Analysis with XGBoost and Databricks Runtime for Machine Learning](https://databricks.com/blog/2018/08/09/loan-risk-analysis-with-xgboost-and-databricks-runtime-for-machine-learning.html).  This pipelne is in two parts:
 1. The [Loan Risk Pipeline]() Delta Live Tables notebook is a sample Delta medallion architecture ala bronze (BZ), silver (Ag), and gold (Au) data quality layers.  It processes the loan risk data through multiple transformations and two gold tables.  The pipeline also runs a pyspark logistic regression ML pipeline to predict bad loans based on this data.
@@ -155,7 +155,7 @@ This Loan Risk Analysis pipeline sample is based on the [Loan Risk Analysis with
 5. Once your pipeline has finished, you can view the results using the *Loan Risk Analysis* notebook.
 
 
-### NYC Taxi Dataset
+## NYC Taxi Dataset
 
 The NYC Taxi demo is available in `scala` and `python` to process the [NYC Taxi dataset](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page) specific to the year 2015.  The Python code generates the following pipeline in the form of a Delta medallion architecture ala bronze (BZ), silver (Ag), and gold (Au) data quality layers. 
 
