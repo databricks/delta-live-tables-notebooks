@@ -8,7 +8,7 @@ AS SELECT * FROM json.`/databricks-datasets/wikipedia-datasets/data-001/clickstr
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE cleanstream_clean(
+CREATE LIVE TABLE clickstream_clean(
   CONSTRAINT valid_current_page EXPECT (current_page_id IS NOT NULL and current_page_title IS NOT NULL),
   CONSTRAINT valid_count EXPECT (click_count > 0) ON VIOLATION FAIL UPDATE
 )
@@ -30,18 +30,20 @@ TBLPROPERTIES ("quality" = "gold")
 AS SELECT
   previous_page_title as referrer,
   click_count
-FROM live.cleanstream_clean
+FROM live.clickstream_clean
+WHERE current_page_title = 'Apache_Spark'
 ORDER BY click_count DESC
 LIMIT 10
 
 -- COMMAND ----------
 
 CREATE LIVE TABLE top_pages
-COMMENT "A list of the top 50 pages by number of clicks"
+COMMENT "A list of the top 50 pages by number of clicks."
 TBLPROPERTIES ("quality" = "gold")
 AS SELECT
   current_page_title,
   SUM(click_count) as total_clicks
-FROM live.cleanstream_clean
+FROM live.clickstream_clean
 GROUP BY current_page_title
-ORDER BY 2
+ORDER BY 2 DESC
+LIMIT 50
