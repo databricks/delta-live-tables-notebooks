@@ -19,7 +19,7 @@
 ## Wikipedia
 The Wikipedia clickstream sample is a great way to jump start using Delta Live Tables (DLT).  It is a simple bificating pipeline that creates a table on your JSON data, cleanses the data, and then creates two tables.  
 
-<img src="images/wikipedia-00-pipeline.png" width="400"/>
+<img src="images/wikipedia-00-pipeline.png" width="500"/>
 
 This sample is available for both [SQL](https://github.com/databricks/delta-live-tables-notebooks/blob/main/sql/Wikipedia.sql) and [Python](https://github.com/databricks/delta-live-tables-notebooks/blob/main/python/Wikipedia.py).
 
@@ -32,14 +32,14 @@ This sample is available for both [SQL](https://github.com/databricks/delta-live
   * Fill in the **Pipeline Name**, e.g. `Wikipedia`
   * For the **Notebook Path**, fill in the path of the notebook such as `/Repos/michael@databricks.com/delta-live-tables-notebooks/SQL/Wikipedia`
     
-    <img src="images/wikipedia-01-create-pipeline.png" width="300"/>
+    <img src="images/wikipedia-01-create-pipeline.png" width="400"/>
 
 
 **2. Edit your pipeline JSON**
 
   * Once you have setup your pipeline, click **Edit Settings** near the top, the JSON will look similar to below
 
-    <img src="images/wikipedia-02-edit-pipeline.png" width="300"/>  
+    <img src="images/wikipedia-02-edit-pipeline.png" width="400"/>  
 
   * To publish your tables, add the `target` parameter to specify which database you want to persist your tables, e.g. `wiki_demo`.
 
@@ -48,7 +48,7 @@ This sample is available for both [SQL](https://github.com/databricks/delta-live
 
   * To view the progress of your pipeline, refer to the progress flow near the bottom of the pipeline details UI as noted in the following image. 
 
-    <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark-progress.png" width="500"/>
+    <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark-progress.png" width="600"/>
 
 
 **4. Reviewing the results**
@@ -63,7 +63,7 @@ This sample is available for both [SQL](https://github.com/databricks/delta-live
 
   * Unsurprisingly, the top referrer is "Google" which you can see graphically when you convert your table into an area chart.
   
-   <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark-area-chart.png" width="600"/>
+   <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark-area-chart.png" width="700"/>
 
 
 
