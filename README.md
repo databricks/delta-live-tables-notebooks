@@ -55,15 +55,15 @@ This sample is available for both [SQL](https://github.com/databricks/delta-live
 
   * Once your pipeline has completed processing, you can review the data by opening up a new Databricks notebook and running the following SQL statements:
 
-   ```
-   %sql
-   -- Review the top referrers to Wikipedia's Apache Spark articles
-   SELECT * FROM wiki_demo.wiki_spark
-   ```
+    ```
+    %sql
+    -- Review the top referrers to Wikipedia's Apache Spark articles
+    SELECT * FROM wiki_demo.wiki_spark
+    ```
 
   * Unsurprisingly, the top referrer is "Google" which you can see graphically when you convert your table into an area chart.
   
-   <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark-area-chart.png" width="700"/>
+    <img src="https://raw.githubusercontent.com/databricks/tech-talks/master/images/dlt-wikipedia_wiki-spark-area-chart.png" width="700"/>
 
 
 
