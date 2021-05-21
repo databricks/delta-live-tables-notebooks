@@ -1,53 +1,36 @@
 # Databricks notebook source
 # 
 # Loan Risk Analysis
+# An example Delta Live Tables pipeline that loan risk data and builds some aggregate and feature engineering tables.
+#
+#   More information can be found in the Lending Club dictionary at: https://resources.lendingclub.com/LCDataDictionary.xlsx
 #
 
-# Use the following command to get the full filepath
-#dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get() 
-
-# Important: Modify the database name so it goes to your chosen database
-database_name = "loan_risk"
-
-#
-# Import 
-#
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
-
-#
-# Bronze Table
-#
-
-# Loan Risk data (from Kaggle)
 lspq_path = "/databricks-datasets/samples/lending_club/parquet/"
-table_name = database_name + ".bz_lending_club"
 @create_table(
-  name="bz_lending_club",
+  comment="The raw loan risk dataset, ingested from /databricks-datasets.",
   table_properties={
-      "pipelines.metastore.tableName": table_name
+    "quality": "bronze"
   }
 )
-@expect_or_drop("avg_cur_bal", "avg_cur_bal >= 0")
-def bz_lending_club():
+def lendingclub_raw():
   return (
     spark.read.parquet(lspq_path)
   )
 
 
-#
-# Silver Tables
-#
-table_name = database_name + ".ag_loan_stats"
 @create_table(
-  name="ag_loan_stats",
+  comment="Loan risk dataset with cleaned-up datatypes / column names and quality expectations.",  
   table_properties={
-      "pipelines.metastore.tableName": table_name
+    "quality": "silver"
   }
 )
-def ag_loan_stats():
-  loan_stats = read("bz_lending_club")
+@expect_or_drop("avg_cur_bal", "avg_cur_bal >= 0")
+def lendingclub_clean():
+  loan_stats = read("lendingclub_raw")
   
   # Create bad loan label, this will include charged off, defaulted, and late repayments on loans...
   loan_stats = (loan_stats
@@ -78,48 +61,41 @@ def ag_loan_stats():
   )
 
 
-#
-# Gold Tables
-#
 
-# Summary Statistics table
-table_name = database_name + ".au_summary_data"
 @create_table(
-  name="au_summary_data",
+  comment="Loan risk summary dataset for analytics.",  
   table_properties={
-      "pipelines.metastore.tableName": table_name
+    "quality": "gold"
   }
 )
 @expect_or_drop("valid addr_state", "addr_state IS NOT NULL")
-def au_summary_data():
+def summary_data():
   return (
-    read("ag_loan_stats").select("grade", "loan_amnt", "annual_inc", "dti", "credit_length_in_years", "addr_state", "bad_loan", "net")
+    read("lendingclub_clean").select("grade", "loan_amnt", "annual_inc", "dti", "credit_length_in_years", "addr_state", "bad_loan", "net")
   )
 
 
-# Features table
-table_name = database_name + ".au_features"
-@create_table(
-  name="au_features",
-  table_properties={
-      "pipelines.metastore.tableName": table_name
-  }    
-)
-def au_features():
-  return (
-    read("ag_loan_stats").select("term","home_ownership","purpose","addr_state","verification_status","application_type","loan_amnt","emp_length", "annual_inc","dti","delinq_2yrs","revol_util","total_acc", "credit_length_in_years","bad_loan","int_rate","net","issue_year")    
-  )
 
-
-#
-# ML Training Data Table
-#
-table_name = database_name + ".train_data"
 @create_table(
-  name="train_data",
+  comment="Loan risk features dataset for training and validation datasets.",  
+  partition_cols=["issue_year"],
   table_properties={
-      "pipelines.metastore.tableName": table_name
+    "quality": "gold"
   }  
+)
+def features():
+  return (
+    read("lendingclub_clean")
+      .select("term","home_ownership","purpose","addr_state","verification_status","application_type","loan_amnt","emp_length",
+              "annual_inc","dti","delinq_2yrs","revol_util","total_acc", "credit_length_in_years","bad_loan","int_rate","net","issue_year")    
+  )
+
+
+@create_table(
+  comment="ML training dataset based on Loan Risk data features.",  
+  table_properties={
+    "quality": "gold"
+  }    
 )
 def train_data():
   # Setting variables to predict bad loans
@@ -129,23 +105,19 @@ def train_data():
   myX = categoricals + numerics
 
   # Setup dataset
-  loan_stats2 = read("au_features").select(myX + [myY, "int_rate", "net", "issue_year"])
-  train_data = loan_stats2.filter(loan_stats2.issue_year <= 2015)
+  features = read("features").select(myX + [myY, "int_rate", "net", "issue_year"])
+  train_data = features.filter(features.issue_year <= 2015)
   
   return (
     train_data
   )
 
 
-#
-# ML Validation Data Table
-#
-table_name = database_name + ".valid_data"
 @create_table(
-  name="valid_data",
+  comment="ML validation dataset based on Loan Risk data features.",  
   table_properties={
-      "pipelines.metastore.tableName": table_name
-  }  
+    "quality": "gold"
+  }      
 )
 def valid_data():
   # Setting variables to predict bad loans
@@ -155,8 +127,8 @@ def valid_data():
   myX = categoricals + numerics
 
   # Setup dataset
-  loan_stats2 = read("au_features").select(myX + [myY, "int_rate", "net", "issue_year"])
-  valid_data = loan_stats2.filter(loan_stats2.issue_year > 2015)
+  features = read("features").select(myX + [myY, "int_rate", "net", "issue_year"])
+  valid_data = features.filter(features.issue_year > 2015)
   
   return (
     valid_data
