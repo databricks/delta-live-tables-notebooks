@@ -1,16 +1,17 @@
 -- Databricks notebook source
-CREATE LIVE VIEW customers
+CREATE INCREMENTAL LIVE TABLE customers
 COMMENT "The customers buying finished products, ingested from /databricks-datasets."
 TBLPROPERTIES ("quality" = "mapping")
-AS SELECT * FROM cloud_files("/databricks-datasets/retail-org/customers/customers.csv", "csv")
+AS SELECT * FROM cloud_files("/databricks-datasets/retail-org/customers/", "csv")
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE sales_orders_raw
+CREATE INCREMENTAL LIVE TABLE sales_orders_raw
 COMMENT "The raw sales orders, ingested from /databricks-datasets."
 TBLPROPERTIES ("quality" = "bronze")
 AS
-SELECT * FROM json.`/databricks-datasets/retail-org/sales_orders/part-00000-tid-1771549084454148016-e2275afd-a5bb-40ed-b044-1774c0fdab2b-105592-1-c000.json`
+--SELECT * FROM cloud_files("/databricks-datasets/retail-org/sales_stream/sales_stream.json/", "json", map("cloudFiles.inferColumnTypes", "true"))
+SELECT * FROM cloud_files("/databricks-datasets/retail-org/sales_orders/", "json", map("cloudFiles.inferColumnTypes", "true"))
 
 -- COMMAND ----------
 
@@ -21,7 +22,8 @@ PARTITIONED BY (order_datetime)
 COMMENT "The cleaned sales orders with valid order_number(s) and partitioned by order_datetime."
 TBLPROPERTIES ("quality" = "silver")
 AS
-SELECT clicked_items, customer_id, customer_name, number_of_line_items, order_datetime, order_number, ordered_products, promo_info, c.*
+SELECT f.customer_id, f.customer_name, f.number_of_line_items, f.order_datetime, f.order_number, f.ordered_products,
+       c.state, c.city, c.lon, c.lat, c.units_purchased, c.loyalty_segment
   FROM LIVE.sales_orders_raw f
     LEFT JOIN LIVE.customers c
       ON c.customer_id = f.customer_id
