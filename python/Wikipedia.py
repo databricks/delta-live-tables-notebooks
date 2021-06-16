@@ -45,7 +45,7 @@ def clickstream_clean():
   )
 
 
-@create_table(
+@dlt.create_table(
   comment="A table of the most common pages that link to the Apache Spark page.",
   table_properties={
     "quality": "gold"  
