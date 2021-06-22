@@ -1,4 +1,3 @@
-# Databricks notebook source
 # 
 # Loan Risk Analysis
 # An example Delta Live Tables pipeline that loan risk data and builds some aggregate and feature engineering tables.
@@ -9,8 +8,11 @@
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
+import dlt
+
+
 lspq_path = "/databricks-datasets/samples/lending_club/parquet/"
-@create_table(
+@dlt.create_table(
   comment="The raw loan risk dataset, ingested from /databricks-datasets.",
   table_properties={
     "quality": "bronze"
@@ -22,15 +24,15 @@ def lendingclub_raw():
   )
 
 
-@create_table(
+@dlt.create_table(
   comment="Loan risk dataset with cleaned-up datatypes / column names and quality expectations.",  
   table_properties={
     "quality": "silver"
   }
 )
-@expect_or_drop("avg_cur_bal", "avg_cur_bal >= 0")
+@dlt.expect_or_drop("avg_cur_bal", "avg_cur_bal >= 0")
 def lendingclub_clean():
-  loan_stats = read("lendingclub_raw")
+  loan_stats = dlt.read("lendingclub_raw")
   
   # Create bad loan label, this will include charged off, defaulted, and late repayments on loans...
   loan_stats = (loan_stats
@@ -62,21 +64,21 @@ def lendingclub_clean():
 
 
 
-@create_table(
+@dlt.create_table(
   comment="Loan risk summary dataset for analytics.",  
   table_properties={
     "quality": "gold"
   }
 )
-@expect_or_drop("valid addr_state", "addr_state IS NOT NULL")
+@dlt.expect_or_drop("valid addr_state", "addr_state IS NOT NULL")
 def summary_data():
   return (
-    read("lendingclub_clean").select("grade", "loan_amnt", "annual_inc", "dti", "credit_length_in_years", "addr_state", "bad_loan", "net")
+    dlt.read("lendingclub_clean").select("grade", "loan_amnt", "annual_inc", "dti", "credit_length_in_years", "addr_state", "bad_loan", "net")
   )
 
 
 
-@create_table(
+@dlt.create_table(
   comment="Loan risk features dataset for training and validation datasets.",  
   partition_cols=["issue_year"],
   table_properties={
@@ -85,13 +87,13 @@ def summary_data():
 )
 def features():
   return (
-    read("lendingclub_clean")
+    dlt.read("lendingclub_clean")
       .select("term","home_ownership","purpose","addr_state","verification_status","application_type","loan_amnt","emp_length",
               "annual_inc","dti","delinq_2yrs","revol_util","total_acc", "credit_length_in_years","bad_loan","int_rate","net","issue_year")    
   )
 
 
-@create_table(
+@dlt.create_table(
   comment="ML training dataset based on Loan Risk data features.",  
   table_properties={
     "quality": "gold"
@@ -105,7 +107,7 @@ def train_data():
   myX = categoricals + numerics
 
   # Setup dataset
-  features = read("features").select(myX + [myY, "int_rate", "net", "issue_year"])
+  features = dlt.read("features").select(myX + [myY, "int_rate", "net", "issue_year"])
   train_data = features.filter(features.issue_year <= 2015)
   
   return (
@@ -113,7 +115,7 @@ def train_data():
   )
 
 
-@create_table(
+@dlt.create_table(
   comment="ML validation dataset based on Loan Risk data features.",  
   table_properties={
     "quality": "gold"
@@ -127,7 +129,7 @@ def valid_data():
   myX = categoricals + numerics
 
   # Setup dataset
-  features = read("features").select(myX + [myY, "int_rate", "net", "issue_year"])
+  features = dlt.read("features").select(myX + [myY, "int_rate", "net", "issue_year"])
   valid_data = features.filter(features.issue_year > 2015)
   
   return (
