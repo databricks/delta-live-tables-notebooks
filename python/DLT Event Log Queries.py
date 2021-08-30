@@ -4,12 +4,26 @@
 
 # COMMAND ----------
 
-# Fill in the pipelines_id and pipeline_name
-pipelines_id = "c4885e65-0eca-4d87-9c38-88a7840c5f8b"
-pipeline_name = "Wikipedia Python Pipeline"
+# Fill in the pipelines_id, pipeline_name and storage_location
+pipelines_id = "" #used to find the event path if storage location is blank
+pipeline_name = "" 
+storage_location = "" #may be blank, in which case, the pipelines_id is used for the event path
 
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
+
+# COMMAND ----------
+
+# derive event location based on storage_location and pipelines_id
+
+event_location = ""
+
+if storage_location != "":
+  event_location = "dbfs:" + storage_location + "/system/events/"
+else:
+  event_location = "dbfs:/pipelines/" + pipelines_id + "/system/events/"
+  
+event_location
 
 # COMMAND ----------
 
