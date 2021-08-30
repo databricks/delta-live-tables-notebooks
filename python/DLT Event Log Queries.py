@@ -33,7 +33,7 @@ event_location
 
 # Data Quality Expecations | Flow Progress Completed
 sqlQuery = """SELECT id, origin, timestamp, details
-                FROM delta.`dbfs:/pipelines/""" + pipelines_id + """/system/events/`
+                FROM delta.`""" + event_location + """`
                WHERE details LIKE '%flow_progress%COMPLETED%data_quality%expectations%' order by timestamp desc"""
 df = spark.sql(sqlQuery)
 
@@ -68,9 +68,9 @@ df_expectations.createOrReplaceTempView("df_expectations")
 
 # DLT Lineage (skip maintenance jobs)
 sqlQuery = """SELECT id, origin, sequence, timestamp, message, event_type, details
-                FROM delta.`dbfs:/pipelines/""" + pipelines_id + """/system/events/`
+                FROM delta.`""" + event_location + """`
                WHERE origin.cluster_id = (
-                 SELECT origin.cluster_id FROM delta.`dbfs:/pipelines/""" + pipelines_id + """/system/events/`
+                 SELECT origin.cluster_id FROM delta.`""" + event_location + """`
                   WHERE origin.pipeline_name = '""" + pipeline_name + """'
                     AND origin.maintenance_id IS NULL ORDER BY timestamp DESC LIMIT 1
                )"""
