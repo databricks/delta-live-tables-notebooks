@@ -1,3 +1,4 @@
+# Databricks notebook source
 # 
 # Loan Risk Analysis
 # An example Delta Live Tables pipeline that loan risk data and builds some aggregate and feature engineering tables.
