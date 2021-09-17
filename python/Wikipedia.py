@@ -1,3 +1,4 @@
+# Databricks notebook source
 # 
 # Wikipedia Clickstream
 # An example Delta Live Tables pipeline that ingests wikipedia click stream data and builds some simple summary tables.
