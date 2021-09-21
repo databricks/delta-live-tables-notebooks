@@ -1,14 +1,14 @@
 -- Databricks notebook source
 CREATE INCREMENTAL LIVE TABLE customers
 COMMENT "The customers buying finished products, ingested from /databricks-datasets."
-TBLPROPERTIES ("quality" = "mapping")
+TBLPROPERTIES ("myCompanyPipeline.quality" = "mapping")
 AS SELECT * FROM cloud_files("/databricks-datasets/retail-org/customers/", "csv");
 
 -- COMMAND ----------
 
 CREATE INCREMENTAL LIVE TABLE sales_orders_raw
 COMMENT "The raw sales orders, ingested from /databricks-datasets."
-TBLPROPERTIES ("quality" = "bronze")
+TBLPROPERTIES ("myCompanyPipeline.quality" = "bronze")
 AS
 SELECT * FROM cloud_files("/databricks-datasets/retail-org/sales_orders/", "json", map("cloudFiles.inferColumnTypes", "true"))
 
@@ -19,7 +19,7 @@ CREATE INCREMENTAL LIVE TABLE sales_orders_cleaned(
 )
 PARTITIONED BY (order_date)
 COMMENT "The cleaned sales orders with valid order_number(s) and partitioned by order_datetime."
-TBLPROPERTIES ("quality" = "silver")
+TBLPROPERTIES ("myCompanyPipeline.quality" = "silver")
 AS
 SELECT f.customer_id, f.customer_name, f.number_of_line_items, 
   TIMESTAMP(from_unixtime((cast(f.order_datetime as long)))) as order_datetime, 
@@ -34,11 +34,11 @@ SELECT f.customer_id, f.customer_name, f.number_of_line_items,
 
 CREATE LIVE TABLE sales_order_in_la
 COMMENT "Sales orders in LA."
-TBLPROPERTIES ("quality" = "gold")
+TBLPROPERTIES ("myCompanyPipeline.quality" = "gold")
 AS
 SELECT city, order_date, customer_id, customer_name, ordered_products_explode.curr, SUM(ordered_products_explode.price) as sales, SUM(ordered_products_explode.qty) as qantity, COUNT(ordered_products_explode.id) as product_count
 FROM (
-  SELECT city, DATE(order_datetime) as order_date, customer_id, customer_name, EXPLODE(ordered_products) as ordered_products_explode
+  SELECT city, order_date, customer_id, customer_name, EXPLODE(ordered_products) as ordered_products_explode
   FROM LIVE.sales_orders_cleaned 
   WHERE city = 'Los Angeles'
   )
@@ -48,11 +48,11 @@ GROUP BY order_date, city, customer_id, customer_name, ordered_products_explode.
 
 CREATE LIVE TABLE sales_order_in_chicago
 COMMENT "Sales orders in Chicago."
-TBLPROPERTIES ("quality" = "gold")
+TBLPROPERTIES ("myCompanyPipeline.quality" = "gold")
 AS
 SELECT city, order_date, customer_id, customer_name, ordered_products_explode.curr, SUM(ordered_products_explode.price) as sales, SUM(ordered_products_explode.qty) as qantity, COUNT(ordered_products_explode.id) as product_count
 FROM (
-  SELECT city, DATE(order_datetime) as order_date, customer_id, customer_name, EXPLODE(ordered_products) as ordered_products_explode
+  SELECT city, order_date, customer_id, customer_name, EXPLODE(ordered_products) as ordered_products_explode
   FROM LIVE.sales_orders_cleaned 
   WHERE city = 'Chicago'
   )
