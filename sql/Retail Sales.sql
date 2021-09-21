@@ -6,7 +6,6 @@ AS SELECT * FROM cloud_files("/databricks-datasets/retail-org/customers/", "csv"
 
 -- COMMAND ----------
 
-# The table property "myCompanyPipeline.quality": "bronze" is a namespaced table property that is used to describe the table quality for later
 CREATE INCREMENTAL LIVE TABLE sales_orders_raw
 COMMENT "The raw sales orders, ingested from /databricks-datasets."
 TBLPROPERTIES ("myCompanyPipeline.quality" = "bronze")

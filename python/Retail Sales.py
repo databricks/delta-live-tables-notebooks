@@ -20,7 +20,6 @@ def customers():
 
 # COMMAND ----------
 
-# The table property "myCompanyPipeline.quality": "bronze" is a namespaced table property that is used to describe the table quality for later
 @dlt.create_table(
   comment="The raw sales orders, ingested from /databricks-datasets.",
   table_properties={
