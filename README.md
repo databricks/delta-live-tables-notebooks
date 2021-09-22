@@ -58,7 +58,7 @@ This sample is available for both [SQL](https://github.com/databricks/delta-live
     ```
     %sql
     -- Review the top referrers to Wikipedia's Apache Spark articles
-    SELECT * FROM wiki_demo.wiki_spark
+    SELECT * FROM wiki_demo.top_spark_referers
     ```
 
   * Unsurprisingly, the top referrer is "Google" which you can see graphically when you convert your table into an area chart.
