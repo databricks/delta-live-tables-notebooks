@@ -25,6 +25,8 @@ def lendingclub_raw():
   )
 
 
+# COMMAND ----------
+
 @dlt.create_table(
   comment="Loan risk dataset with cleaned-up datatypes / column names and quality expectations.",  
   table_properties={
@@ -64,6 +66,7 @@ def lendingclub_clean():
   )
 
 
+# COMMAND ----------
 
 @dlt.create_table(
   comment="Loan risk summary dataset for analytics.",  
@@ -78,6 +81,7 @@ def summary_data():
   )
 
 
+# COMMAND ----------
 
 @dlt.create_table(
   comment="Loan risk features dataset for training and validation datasets.",  
@@ -94,6 +98,14 @@ def features():
   )
 
 
+# COMMAND ----------
+
+# Setting variables to predict bad loans
+myY = "bad_loan"
+categoricals = ["term", "home_ownership", "purpose", "addr_state","verification_status","application_type"]
+numerics = ["loan_amnt", "emp_length", "annual_inc", "dti", "delinq_2yrs", "revol_util", "total_acc", "credit_length_in_years"]
+myX = categoricals + numerics
+
 @dlt.create_table(
   comment="ML training dataset based on Loan Risk data features.",  
   table_properties={
@@ -101,12 +113,6 @@ def features():
   }    
 )
 def train_data():
-  # Setting variables to predict bad loans
-  myY = "bad_loan"
-  categoricals = ["term", "home_ownership", "purpose", "addr_state","verification_status","application_type"]
-  numerics = ["loan_amnt", "emp_length", "annual_inc", "dti", "delinq_2yrs", "revol_util", "total_acc", "credit_length_in_years"]
-  myX = categoricals + numerics
-
   # Setup dataset
   features = dlt.read("features").select(myX + [myY, "int_rate", "net", "issue_year"])
   train_data = features.filter(features.issue_year <= 2015)
@@ -116,6 +122,8 @@ def train_data():
   )
 
 
+# COMMAND ----------
+
 @dlt.create_table(
   comment="ML validation dataset based on Loan Risk data features.",  
   table_properties={
@@ -123,12 +131,6 @@ def train_data():
   }      
 )
 def valid_data():
-  # Setting variables to predict bad loans
-  myY = "bad_loan"
-  categoricals = ["term", "home_ownership", "purpose", "addr_state","verification_status","application_type"]
-  numerics = ["loan_amnt", "emp_length", "annual_inc", "dti", "delinq_2yrs", "revol_util", "total_acc", "credit_length_in_years"]
-  myX = categoricals + numerics
-
   # Setup dataset
   features = dlt.read("features").select(myX + [myY, "int_rate", "net", "issue_year"])
   valid_data = features.filter(features.issue_year > 2015)
