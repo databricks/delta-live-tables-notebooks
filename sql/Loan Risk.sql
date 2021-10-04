@@ -13,8 +13,8 @@ COMMENT "Loan risk dataset with cleaned-up datatypes / column names and quality 
 TBLPROPERTIES ("quality" = "silver")
 AS
 SELECT CASE 
-         WHEN loan_status = "Fully Paid" THEN False
-         Else True
+         WHEN loan_status = "Fully Paid" THEN "false"
+         Else "true"
        END AS bad_loan,
        CAST(REPLACE(int_rate, '%', '') AS float) AS int_rate,
        CAST(REPLACE(revol_util, '%', '') AS float) AS revol_util,
