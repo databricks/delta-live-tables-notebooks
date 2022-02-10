@@ -3,21 +3,7 @@
 -- MAGIC 
 -- MAGIC # Implement CDC In DLT Pipeline: Change Data Capture
 -- MAGIC 
--- MAGIC <img src="https://raw.githubusercontent.com/morganmazouchi/Delta-Live-Tables/main/Images/dlt%20end%20to%20end%20flow.png", width='1500'/>
-
--- COMMAND ----------
-
--- MAGIC %python
--- MAGIC slide_id = '10Dmx43aZXzfK9LJvJjH1Bjgwa3uvS2Pk7gVzxhr3H2Q'
--- MAGIC slide_number = 'id.p9'
--- MAGIC  
--- MAGIC displayHTML(f'''<iframe
--- MAGIC  src="https://docs.google.com/presentation/d/{slide_id}/embed?slide={slide_number}&rm=minimal"
--- MAGIC   frameborder="0"
--- MAGIC   width="75%"
--- MAGIC   height="600"
--- MAGIC ></iframe>
--- MAGIC ''')
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks/delta-live-tables-notebooks/main/change-data-capture-example/Images/dlt_end_to_end_flow.png", width='1500'/>
 
 -- COMMAND ----------
 
@@ -74,7 +60,7 @@
 -- MAGIC 
 -- MAGIC Here is the flow we'll implement, consuming CDC data from an external database. Note that the incoming could be any format, including message queue such as Kafka.
 -- MAGIC 
--- MAGIC <img src="https://raw.githubusercontent.com/morganmazouchi/Delta-Live-Tables/main/Images/cdc_flow_new.png" alt='Make all your data ready for BI and ML'/>
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks/delta-live-tables-notebooks/main/change-data-capture-example/Images/cdc_flow_new.png" alt='Make all your data ready for BI and ML'/>
 
 -- COMMAND ----------
 
@@ -97,14 +83,14 @@
 -- MAGIC %md-sandbox
 -- MAGIC ### Incremental data loading using Auto Loader (cloud_files)
 -- MAGIC <div style="float:right">
--- MAGIC   <img width="700px" src="https://raw.githubusercontent.com/morganmazouchi/Delta-Live-Tables/main/Images/DLT_CDC.png"/>
+-- MAGIC   <img width="700px" src="https://raw.githubusercontent.com/databricks/delta-live-tables-notebooks/main/change-data-capture-example/Images/DLT_CDC.png"/>
 -- MAGIC </div>
 -- MAGIC Working with external system can be challenging due to schema update. The external database can have schema update, adding or modifying columns, and our system must be robust against these changes.
 -- MAGIC Databricks Autoloader (`cloudFiles`) handles schema inference and evolution out of the box.
 -- MAGIC 
 -- MAGIC Autoloader allow us to efficiently ingest millions of files from a cloud storage, and support efficient schema inference and evolution at scale. In this notebook we leverage Autoloader to handle streaming (and batch) data.
 -- MAGIC 
--- MAGIC Let's use it to [create our pipeline](https://e2-demo-field-eng.cloud.databricks.com/?o=1444828305810485&owned-by-me=true&name-order=ascend#joblist/pipelines/9c8cb908-b438-495c-931d-39fcf72c5dca) and ingest the raw JSON data being delivered by an external provider. 
+-- MAGIC Let's use it to create our pipeline and ingest the raw JSON data being delivered by an external provider. 
 
 -- COMMAND ----------
 
@@ -113,19 +99,19 @@
 
 CREATE INCREMENTAL LIVE TABLE customer_bronze
 (
-    address string,
-    email string,
-    id string,
-    name string,
-    operation string,
-    operation_date string,
-    _rescued_data string 
+address string,
+email string,
+id string,
+name string,
+operation string,
+operation_date string,
+_rescued_data string 
 )
 TBLPROPERTIES ("quality" = "bronze")
 COMMENT "New customer data incrementally ingested from cloud object storage landing zone"
 AS 
 SELECT * 
-FROM cloud_files("/home/morganmazouchi@databricks.com/mj_retail/landing", "json", map("cloudFiles.inferColumnTypes", "true"));
+FROM cloud_files('/home/demos/ChangeDataCapture/landing', "json", map("cloudFiles.inferColumnTypes", "true"));
 
 -- COMMAND ----------
 
@@ -148,7 +134,7 @@ FROM STREAM(live.customer_bronze);
 -- MAGIC %md-sandbox
 -- MAGIC ## Materializing the silver table
 -- MAGIC 
--- MAGIC <img src="https://raw.githubusercontent.com/morganmazouchi/Delta-Live-Tables/main/Images/cdc_silver_layer.png" alt='Make all your data ready for BI and ML' style='float: right' width='1000'/>
+-- MAGIC <img src="https://raw.githubusercontent.com/databricks/delta-live-tables-notebooks/main/change-data-capture-example/Images/cdc_silver_layer.png" alt='Make all your data ready for BI and ML' style='float: right' width='1000'/>
 -- MAGIC 
 -- MAGIC The silver `customer_silver` table will contain the most up to date view. It'll be a replicate of the original MYSQL table.
 -- MAGIC 
@@ -174,6 +160,12 @@ FROM stream(live.customer_bronze_clean_v)
 
 -- MAGIC %md
 -- MAGIC 
--- MAGIC Next step, create DLT pipeline, add a path to this notebook and **add configuration with enabling applychanges to true**. For more detail see notebook "PipelineSettingConfiguration.json". 
+-- MAGIC Next step, create DLT pipeline, add a path to this notebook and add this to your DLT Pipeline's settings: ```    "configuration": {
+-- MAGIC         "pipelines.applyChangesPreviewEnabled": "true"
+-- MAGIC     },```.
 -- MAGIC 
--- MAGIC After running the pipeline, check "3. Retail_DLT_CDC_Monitoring" to monitor log events and lineage data.
+-- MAGIC After running the pipeline, check "Retail_DLT_CDC_Monitoring" to monitor log events and lineage data.
+
+-- COMMAND ----------
+
+
