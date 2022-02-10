@@ -3,7 +3,7 @@
 -- MAGIC 
 -- MAGIC # Implement CDC In DLT Pipeline: Change Data Capture
 -- MAGIC 
--- MAGIC <img src="https://raw.githubusercontent.com/databricks/delta-live-tables-notebooks/main/change-data-capture-example/Images/dlt_end_to_end_flow.png", width='1500'/>
+-- MAGIC <img src="https://github.com/databricks/delta-live-tables-notebooks/blob/main/change-data-capture-example/images/dlt_end_to_end_flow.png?raw=true", width='1500'/>
 
 -- COMMAND ----------
 
@@ -60,7 +60,7 @@
 -- MAGIC 
 -- MAGIC Here is the flow we'll implement, consuming CDC data from an external database. Note that the incoming could be any format, including message queue such as Kafka.
 -- MAGIC 
--- MAGIC <img src="https://raw.githubusercontent.com/databricks/delta-live-tables-notebooks/main/change-data-capture-example/Images/cdc_flow_new.png" alt='Make all your data ready for BI and ML'/>
+-- MAGIC <img src="https://github.com/databricks/delta-live-tables-notebooks/blob/main/change-data-capture-example/images/cdc_flow_new.png?raw=true" alt='Make all your data ready for BI and ML'/>
 
 -- COMMAND ----------
 
@@ -83,8 +83,9 @@
 -- MAGIC %md-sandbox
 -- MAGIC ### Incremental data loading using Auto Loader (cloud_files)
 -- MAGIC <div style="float:right">
--- MAGIC   <img width="700px" src="https://raw.githubusercontent.com/databricks/delta-live-tables-notebooks/main/change-data-capture-example/Images/DLT_CDC.png"/>
+-- MAGIC   <img width="700px" src="https://github.com/databricks/delta-live-tables-notebooks/blob/main/change-data-capture-example/images/DLT_CDC.png?raw=true"/>
 -- MAGIC </div>
+-- MAGIC 
 -- MAGIC Working with external system can be challenging due to schema update. The external database can have schema update, adding or modifying columns, and our system must be robust against these changes.
 -- MAGIC Databricks Autoloader (`cloudFiles`) handles schema inference and evolution out of the box.
 -- MAGIC 
@@ -134,7 +135,7 @@ FROM STREAM(live.customer_bronze);
 -- MAGIC %md-sandbox
 -- MAGIC ## Materializing the silver table
 -- MAGIC 
--- MAGIC <img src="https://raw.githubusercontent.com/databricks/delta-live-tables-notebooks/main/change-data-capture-example/Images/cdc_silver_layer.png" alt='Make all your data ready for BI and ML' style='float: right' width='1000'/>
+-- MAGIC <img src="https://github.com/databricks/delta-live-tables-notebooks/blob/main/change-data-capture-example/images/cdc_silver_layer.png?raw=true" alt='Make all your data ready for BI and ML' style='float: right' width='1000'/>
 -- MAGIC 
 -- MAGIC The silver `customer_silver` table will contain the most up to date view. It'll be a replicate of the original MYSQL table.
 -- MAGIC 
