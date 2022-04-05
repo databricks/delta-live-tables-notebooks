@@ -1,7 +1,7 @@
 <h1>Delta Live Tables Example Notebooks</h1>
 
 <p align="center">
-  <img src="https://delta.io/wp-content/uploads/2019/04/delta-lake-logo-tm.png" width="140"/><br>
+  <img src="https://databricks.com/wp-content/uploads/2021/10/logo-color-delta-lake-1.svg" width="200"/><br>
   <strong>Delta Live Tables</strong> is a new framework designed to enable customers to successfully declaratively define, deploy, test & upgrade data pipelines and eliminate operational burdens associated with the management of such pipelines.
 </p>
 <p align="center">
@@ -28,20 +28,19 @@ This sample is available for both [SQL](https://github.com/databricks/delta-live
 
 **1. Create your pipeline using the following parameters**
 
-  * From your Databricks workspace, click **Jobs** and then **Pipelines**; click on **Create Pipeline**
+  * From your Databricks workspace, click **Jobs**, then **Delta Live Tables** and click on **Create Pipeline**
   * Fill in the **Pipeline Name**, e.g. `Wikipedia`
-  * For the **Notebook Path**, fill in the path of the notebook such as `/Repos/michael@databricks.com/delta-live-tables-notebooks/SQL/Wikipedia`
+  * For the **Notebook Libraries**, fill in the path of the notebook such as `/Repos/michael@databricks.com/delta-live-tables-notebooks/SQL/Wikipedia`
     
-    <img src="images/wikipedia-01-create-pipeline.png" width="400"/>
+    <img src="https://databricks.com/wp-content/uploads/2022/04/DLT-Pipeline-UI-1.png" width="400"/>
+  * To publish your tables, add the `target` parameter to specify which database you want to persist your tables, e.g. `wiki_demo`.
 
 
 **2. Edit your pipeline JSON**
 
   * Once you have setup your pipeline, click **Edit Settings** near the top, the JSON will look similar to below
 
-    <img src="images/wikipedia-02-edit-pipeline.png" width="400"/>  
-
-  * To publish your tables, add the `target` parameter to specify which database you want to persist your tables, e.g. `wiki_demo`.
+    <img src="https://databricks.com/wp-content/uploads/2022/04/DLT-Pipeline-JSON-1.png" width="400"/>  
 
 
 **3. Click Start**
