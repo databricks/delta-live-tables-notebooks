@@ -182,7 +182,7 @@ def customer_bronze_clean_v():
 dlt.create_target_table(name="customer_silver",
   comment="Clean, merged customers",
   table_properties={
-    "quality": "silver",
+    "quality": "silver"
   }
 )
 
