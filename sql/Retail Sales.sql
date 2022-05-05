@@ -1,12 +1,12 @@
 -- Databricks notebook source
-CREATE INCREMENTAL LIVE TABLE customers
+CREATE STREAMING LIVE TABLE customers
 COMMENT "The customers buying finished products, ingested from /databricks-datasets."
 TBLPROPERTIES ("myCompanyPipeline.quality" = "mapping")
 AS SELECT * FROM cloud_files("/databricks-datasets/retail-org/customers/", "csv");
 
 -- COMMAND ----------
 
-CREATE INCREMENTAL LIVE TABLE sales_orders_raw
+CREATE STREAMING LIVE TABLE sales_orders_raw
 COMMENT "The raw sales orders, ingested from /databricks-datasets."
 TBLPROPERTIES ("myCompanyPipeline.quality" = "bronze")
 AS
@@ -14,7 +14,7 @@ SELECT * FROM cloud_files("/databricks-datasets/retail-org/sales_orders/", "json
 
 -- COMMAND ----------
 
-CREATE INCREMENTAL LIVE TABLE sales_orders_cleaned(
+CREATE STREAMING LIVE TABLE sales_orders_cleaned(
   CONSTRAINT valid_order_number EXPECT (order_number IS NOT NULL) ON VIOLATION DROP ROW
 )
 PARTITIONED BY (order_date)

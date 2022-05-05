@@ -3,7 +3,7 @@ SET spark.databricks.cloudFiles.schemaInference.sampleSize.numFiles = 2
 
 -- COMMAND ----------
 
-CREATE INCREMENTAL LIVE TABLE jhu_covid19_raw
+CREATE STREAMING LIVE TABLE jhu_covid19_raw
 COMMENT "The raw Johns Hopkins COVID-19 dataset, ingested from /databricks-datasets."
 TBLPROPERTIES ("quality" = "bronze")
 AS
