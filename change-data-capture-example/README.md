@@ -17,8 +17,3 @@ You can use [Databricks Projects](https://docs.databricks.com/repos.html) to clo
 
 ### DBR Version
 The features used in the notebooks require DBR 8.3+
-
-### DBC Archive
-Download the DBC archive from releases and import the archive into your Databricks workspace.
-
-
