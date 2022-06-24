@@ -9,8 +9,7 @@ DLT is the first ETL framework that uses a simple declarative approach to buildi
 In this demo we are reading a live Twitter stream, ingesting the streaming data with schema detection, cleansing, and transforming the data, and applying a bit of sentiment analysis to the tweets to classify them.
 
 
-
-<img src="https://github.com/fmunz/twitter-dlt-huggingface/blob/main/markup/twitterstream.jpeg?raw=true" width="800">
+<img src="markup/twitterstream.jpeg" width="800">
 
 
 ## Ingredients
@@ -24,11 +23,11 @@ try:
     tweet_stream.filter(languages=["en","de","es"], track=["DLT","Delta Live Tables"])
 ```
 
-### 📔 The [Twitter-Dataflow.sql notebook](Twitter-DataFlow.sql) uses **[Delta Live Tables](https://databricks.com/product/delta-live-tables) in SQL with Autoloader** 
+### 📔 The [Twitter-Dataflow.sql notebook](Twitter-DataFlow.sql) uses **[Delta Live Tables](https://databricks.com/product/delta-live-tables) in SQL with Auto Loader** 
 
-What matters most in "DLT" is the "P" :-). "P" as in "pipeline" or dataflow. In this example DLT is used together with Databricks Autoloader. Autoloader ingests streaming data into the lakehouse and detects the schema. My DLT pipeline follows the [Medallion Architecture](https://databricks.com/glossary/medallion-architecture) and creates a Bronze table for the raw data, then filters the 40 columns per tweet and cleanses the data to ensure only tweets in English are contained in the Silver table. Ensuring data quality is done with SQL constraints (we like to call them Expectations in DLT lingo).   
+What matters most in "DLT" is the "P" :-). "P" as in "pipeline" or dataflow. In this example DLT is used together with Databricks Auto Loader. Auto Loader ingests streaming data into the lakehouse and detects the schema. My DLT pipeline follows the [Medallion Architecture](https://databricks.com/glossary/medallion-architecture) and creates a Bronze table for the raw data, then filters the 40 columns per tweet and cleanses the data to ensure only tweets in English are contained in the Silver table. Ensuring data quality is done with SQL constraints (we like to call them Expectations in DLT lingo).   
 
-<img src="https://raw.githubusercontent.com/fmunz/twitter-dlt-huggingface/main/markup/lineage.jpg" width="800">
+<img src="markup/lineage.jpeg" width="800">
 
 
 
@@ -37,7 +36,7 @@ What matters most in "DLT" is the "P" :-). "P" as in "pipeline" or dataflow. In 
 For sentiment analysis, I picked Hugging Face (the Databricks platform is open and flexible, so any ML will work). It doesn't get much easier than using a pretrained Hugging Face language model that is even optimized for tweets. The model detects emojis like :-), 😀, 🥲 and so on. My goal was to show how almost any kind of ML can be used within the Lakehouse - with emphasis on simplicity.
 
 
-<img src="https://raw.githubusercontent.com/fmunz/twitter-dlt-huggingface/main/markup/sentiment.jpg" width="800">
+<img src="markup/sentiment.jpeg" width="800">
 
 For a more advanced discussion of [Hugging Face with Databricks see the this blog](https://databricks.com/blog/2021/10/28/gpu-accelerated-sentiment-analysis-using-pytorch-and-huggingface-on-databricks.html). 
 
@@ -45,7 +44,7 @@ For a more advanced discussion of [Hugging Face with Databricks see the this blo
 ### ✅ **Databricks Workflows**
 
 If you have seen a recording of this demo, you will remember how I struggled to switch between the different notebooks for the Twitter Stream, DLT, and ML. Of course this needs to be automated! I am using Databricks Workflows for this and simply create three tasks: one for ingestion with the notebook that is using Tweepy, one task that runs the DLT pipeline, and a third task for the sentiment analysis. This is a workflow example that uses different task types, such as Python notebooks and DLT pipelines. 
-<img src="https://github.com/fmunz/twitter-dlt-huggingface/blob/main/markup/matrix.jpg?raw=true" width="800">
+<img src="markup/matrix.jpeg" width="800">
 
 So if the Workflow is not part of this repository, how can you create your own workflow? Watch this demo about [Databricks Workflows](https://www.youtube.com/watch?v=H2FS4ijpFZA) to get started.
 
@@ -80,6 +79,6 @@ optional:
 
 ### 🤝 Feedback and contributing
 
-* I am happy to accept pull requests but please keep in mind that the focus of this demo is on DLT and simplicity. So I am not looking for more complexity in the ML part, however I'd appreciate some cool visualizations of the final data. 
-* [Srijith](https://www.linkedin.com/in/srijith-rajamohan-ph-d-4242b9a/) provided a very first version of the Tweepy code. 
+* I am happy to accept pull requests but please keep in mind that the focus of this demo is on DLT and simplicity. So I am not looking for more complexity in the ML part, however I'd appreciate other cool visualizations of the final data. 
+* A friend of mine, [Srijith](https://www.linkedin.com/in/srijith-rajamohan-ph-d-4242b9a/) provided a first version of the Tweepy code. Databricks is all about collaboration.  
 * Follow me on twitter for more Data and AI news: [@frankmunz](https://twitter.com/frankmunz). 
