@@ -4,6 +4,10 @@ This Delta Live Tables (DLT) demo was built to have a more realistic data engine
 DLT is the first ETL framework that uses a simple declarative approach to building reliable data pipelines and automatically manages your infrastructure at scale. Data analysts and engineers spend less time on tooling and can focus on getting value from data. With DLT, engineers are able to treat their **data as code** and apply **modern software engineering best practices** like testing, error handling, monitoring, and documentation to deploy reliable pipelines at scale.
 
 
+## Try Databricks for Free
+
+Sign up for a [free Databricks trial](https://databricks.com/try-databricks?itm_data=demos-try-workflows-trial) to explore this demo. 
+
 ## The gist
 
 In this demo we are reading a live Twitter stream, ingesting the streaming data with schema detection, cleansing, and transforming the data, and applying a bit of sentiment analysis to the tweets to classify them.
@@ -82,3 +86,7 @@ optional:
 * I am happy to accept pull requests but please keep in mind that the focus of this demo is on DLT and simplicity. So I am not looking for more complexity in the ML part, however I'd appreciate other cool visualizations of the final data. 
 * A friend of mine, [Srijith](https://www.linkedin.com/in/srijith-rajamohan-ph-d-4242b9a/) provided a first version of the Tweepy code. Databricks is all about collaboration.  
 * Follow me on twitter for more Data and AI news: [@frankmunz](https://twitter.com/frankmunz). 
+
+## Try Databricks for Free
+
+Sign up for a [free Databricks trial](https://databricks.com/try-databricks?itm_data=demos-try-workflows-trial) to explore this demo. 
