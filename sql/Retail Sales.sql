@@ -36,7 +36,7 @@ CREATE LIVE TABLE sales_order_in_la
 COMMENT "Sales orders in LA."
 TBLPROPERTIES ("myCompanyPipeline.quality" = "gold")
 AS
-SELECT city, order_date, customer_id, customer_name, ordered_products_explode.curr, SUM(ordered_products_explode.price) as sales, SUM(ordered_products_explode.qty) as qantity, COUNT(ordered_products_explode.id) as product_count
+SELECT city, order_date, customer_id, customer_name, ordered_products_explode.curr, SUM(ordered_products_explode.price) as sales, SUM(ordered_products_explode.qty) as quantity, COUNT(ordered_products_explode.id) as product_count
 FROM (
   SELECT city, order_date, customer_id, customer_name, EXPLODE(ordered_products) as ordered_products_explode
   FROM LIVE.sales_orders_cleaned 
@@ -50,7 +50,7 @@ CREATE LIVE TABLE sales_order_in_chicago
 COMMENT "Sales orders in Chicago."
 TBLPROPERTIES ("myCompanyPipeline.quality" = "gold")
 AS
-SELECT city, order_date, customer_id, customer_name, ordered_products_explode.curr, SUM(ordered_products_explode.price) as sales, SUM(ordered_products_explode.qty) as qantity, COUNT(ordered_products_explode.id) as product_count
+SELECT city, order_date, customer_id, customer_name, ordered_products_explode.curr, SUM(ordered_products_explode.price) as sales, SUM(ordered_products_explode.qty) as quantity, COUNT(ordered_products_explode.id) as product_count
 FROM (
   SELECT city, order_date, customer_id, customer_name, EXPLODE(ordered_products) as ordered_products_explode
   FROM LIVE.sales_orders_cleaned 
