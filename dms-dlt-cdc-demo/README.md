@@ -1,7 +1,7 @@
-# Change Data Capture Using DMS and Delta Live Tables
+# Using Streaming Delta Live Tables and AWS DMS for Change Data Capture From MySQL
 Welcome to the repository for the Databricks Delta Live Tables Change Data Capture using AWS RDS and DMS.
 
-This code base goes along with the following [PLACEHOLDER BLOG].
+This code base goes along with the following [blog](https://www.databricks.com/blog/2022/09/29/using-streaming-delta-live-tables-and-aws-dms-change-data-capture-mysql.html).
 
 ## Reading Resources
 * [Terraform Quickstart](https://learn.hashicorp.com/collections/terraform/aws-get-started)
