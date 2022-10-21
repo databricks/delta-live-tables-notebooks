@@ -17,7 +17,7 @@ In this demo we are reading a live Twitter stream, ingesting the streaming data 
 
 ### What this is not
 
-This demo is not a DLT beginners tutorial. The demo was build for users with some knowlegde who are ready to experiment and want to explore more. It's also not a canned demo. You have to bring your own twitter keys and deal with real, live tweets that are ingested as a data stream from Twitter. You should be be able to explain and interpret the results. Typically, I carefully selected the search keys and ingested tweets from events happening at that time, e.g. the Data and AI Summit.   
+This demo is not a DLT beginners tutorial. The demo was build for users with some knowlegde who are ready to experiment and want to explore more. It's also not a canned demo. You have to bring your own twitter keys and deal with real, live tweets that are ingested as a data stream from Twitter. You should be able to explain and interpret the results. Typically, I carefully selected the search keys and ingested tweets from events happening at that time, e.g. the Data and AI Summit.   
 
 ## Ingredients
 ### 📔 The [Twitter-Stream-S3.py notebook](Twitter-Stream-S3.py) uses **[Tweepy](https://www.tweepy.org/)** 👩‍💻
