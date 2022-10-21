@@ -2,8 +2,10 @@
 # MAGIC %md
 # MAGIC # TwitterStream to S3 / DBFS
 # MAGIC 
-# MAGIC * [DLT Pipeline](https://data-ai-lakehouse.cloud.databricks.com/?o=2847375137997282#joblist/pipelines/267b91c1-52f0-49e3-8b77-9a50b34f5d39)
-# MAGIC * [Huggingface Sentiment Analysis](https://data-ai-lakehouse.cloud.databricks.com/?o=2847375137997282#notebook/2328309019401991)
+# MAGIC 
+# MAGIC * [jump to Twitter DLT code notebook]($./Twitter-DataFlow)
+# MAGIC * [Pipeline](https://data-ai-lakehouse.cloud.databricks.com/?o=2847375137997282#joblist/pipelines/37ff1cdf-0400-4d6d-b22c-b31bb6209a28)
+# MAGIC * [jump to Twitter-SentimentAnalysis notebook]($./Twitter-SentimentAnalysis)
 
 # COMMAND ----------
 
@@ -20,7 +22,7 @@ access_token_secret = "XXXX"
 
 # COMMAND ----------
 
-# MAGIC %run "./TwitterSetup"
+# MAGIC %run "./Twitter-Setup"
 
 # COMMAND ----------
 
@@ -67,12 +69,12 @@ class TweetStream(tweepy.Stream):
             print(f'retrieving tweet {self.text_count}: {status.text}')
 
         # how many tweets to batch into one file
-        if (self.text_count % 5 == 0):
+        if (self.text_count % 3 == 0):
             self.write_file()
             self.tweet_stack = []
 
         # hard exit after collecting n tweets
-        if (self.text_count == 50000):
+        if (self.text_count == 30):
             raise Exception("Finished job")
 
     def write_file(self):
@@ -92,11 +94,13 @@ class TweetStream(tweepy.Stream):
 
 
 # Initialize instance of the subclass
-tweet_stream = TweetStream("/dbfs/data/twitter_dataeng2")
+tweet_stream = TweetStream("/dbfs/data/twitter_dais2022")
 
 # Filter realtime Tweets by keyword
 try:
-    tweet_stream.filter(languages=["en","de","es"],track=["Databricks", "data science","AI/ML","data lake","machine learning","lakehouse","DLT","Delta Live Tables"])
+    tweet_stream.filter(languages=["en","de","es"],
+                        track=["Data AI World Tour", "Databricks", "DLT"
+                               "Delta Live Tables", "ML", "data", "Databricks Workflows"])
 
 
 
@@ -130,11 +134,17 @@ dbutils.notebook.exit("stop")
 
 # COMMAND ----------
 
-# create a directory to buffer the streamed data
+# count files in that directory - compare with #files in DLT bronze
 !ls -l /dbfs/data/twitter_dataeng2 | wc
 
 # COMMAND ----------
 
+# disk usage
+!du -h  /dbfs/data/twitter_dataeng2
+
+# COMMAND ----------
+
+# remove n files. use this to trim demo
 files = dbutils.fs.ls("/data/twitter_dataeng2")
 del = 400
 print(f'number of files: {len(files)}')
