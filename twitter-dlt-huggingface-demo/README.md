@@ -15,6 +15,9 @@ In this demo we are reading a live Twitter stream, ingesting the streaming data 
 
 <img src="markup/twitterstream.jpeg" width="800">
 
+### What this is not
+
+This demo is not a DLT beginners tutorial. The demo was build for users with some knowlegde who are ready to experiment and want to explore more. It's also not a canned demo. You have to bring your own twitter keys and deal with real, live tweets that are ingested as a data stream from Twitter. You should be be able to explain and interpret the results. Typically, I carefully selected the search keys and ingested tweets from events happening at that time, e.g. the Data and AI Summit.   
 
 ## Ingredients
 ### 📔 The [Twitter-Stream-S3.py notebook](Twitter-Stream-S3.py) uses **[Tweepy](https://www.tweepy.org/)** 👩‍💻
@@ -73,13 +76,17 @@ The features used in the notebooks were tested with the Databricks runtime DBR 1
 
 ### 🚀 Running the demo 
 * Run the Twitter-Stream-S3.py notebook that ingests data from Twitter, or make sure you have tweets from a previous run to process
+  * At this step you have to provide your Twitter keys
 * Trigger the DLT pipeline. Note, that although the pipeline is defined in the Twitter-Dataflow.sql notebook, you have to [create a pipeline first](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-ui.html) to run it. 
 * Run the Twitter-SentimentAnalysis.py notebook to check out the most positive tweets!
 * Explore what happens if the silver table is not a streaming DLT. 
 
 optional:
 * Create a simple Databricks Workflow as described above. Creating a workflow is easy, but it is not necessary if you just want to explore the notebooks manually. 
+* Let's make this fun. Use your own search keys. Run if for Sushi places in your country, or dogs, or beach locations. Make sure to tweet your word clouds and do not forget to add me, so I can see your results! 
 
+### 🤝 More resources
+* I delivered that demo live at Data and AI Summit ([recording on YouTube](https://www.youtube.com/watch?v=_yfApABaeBk)) 
 
 ### 🤝 Feedback and contributing
 
