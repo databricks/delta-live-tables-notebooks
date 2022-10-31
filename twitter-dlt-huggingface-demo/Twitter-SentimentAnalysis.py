@@ -5,9 +5,10 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC (pls ignore, internal use)
-# MAGIC * [Twitter Stream S3](https://data-ai-lakehouse.cloud.databricks.com/?o=2847375137997282#notebook/3842290145331493/command/3842290145331494)
-# MAGIC * [Pipeline](https://data-ai-lakehouse.cloud.databricks.com/?o=2847375137997282#joblist/pipelines/e5a33172-4c5c-459b-ab32-c9f3c720fcac)
+# MAGIC 
+# MAGIC * [jump to Twitter Stream S3 notebook]($./Twitter-Stream-S3)
+# MAGIC * [jump to Twitter DLT code notebook]($./Twitter-DataFlow)
+# MAGIC * [Pipeline](https://data-ai-lakehouse.cloud.databricks.com/?o=2847375137997282#joblist/pipelines/37ff1cdf-0400-4d6d-b22c-b31bb6209a28)
 
 # COMMAND ----------
 
@@ -15,12 +16,8 @@
 
 # COMMAND ----------
 
-df = spark.read.format("delta").table("tweets.silver")
-
-# COMMAND ----------
-
 # MAGIC %md
-# MAGIC ## Huggingface Sentiment Analysis
+# MAGIC ## Hugging Face Sentiment Analysis
 
 # COMMAND ----------
 
@@ -33,6 +30,9 @@ df = spark.read.format("delta").table("tweets.silver")
 from transformers import pipeline
 import pandas as pd
 
+# COMMAND ----------
+
+df = spark.read.format("delta").table("twittervers1.silver")
 tweets = df.toPandas()
 
 # COMMAND ----------
@@ -47,17 +47,16 @@ sentiment_pipeline = pipeline(model="finiteautomata/bertweet-base-sentiment-anal
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Check it out!
+# MAGIC ## Sentiment analysis interactively! (how it works)
 
 # COMMAND ----------
 
 sentiment_pipeline([" :-)",
-                   "I love Lakehouses",
-                   "I do not like it", "WAVE training"])
+                   "I love Lakehouses", "I have a broken notebook, programming error?"])
 
 # COMMAND ----------
 
-sentiments = sentiment_pipeline(tweets.text.to_list())
+sentiments = sentiment_pipeline(tweets.text.to_list()[:127])
 
 # COMMAND ----------
 
@@ -72,7 +71,7 @@ tweets.query('label == "POS"').sort_values(by=['score'], ascending=False)[:15]
 
 # COMMAND ----------
 
-# most neg tweets 
+# most neg tweets, maybe don't use that for public presentation 
 # pd.set_option('display.max_colwidth', None)  
 
 # tweets.query('label == "NEG"').sort_values(by=['score'], ascending=False)[:5].text
@@ -83,12 +82,15 @@ from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
  
 
-# Wordcloud with positive tweets
+# Wordcloud with frequent words in positive tweets
+# note, that these words are not necessarily the positive keywords, but the frequent ones
+# you can experiment with the size of the x list for better graphics
 
 stop_words = ["https", "RT","how"] + list(STOPWORDS)
 
-x = tweets.query('label == "POS"').sort_values(by=['score'], ascending=False)[:100].text
-positive_wordcloud = WordCloud(max_font_size=150, max_words=100, background_color="white", stopwords = stop_words).generate(str(x))
+x = tweets.query('label == "POS"').sort_values(by=['score'], ascending=False)[:30].text
+
+positive_wordcloud = WordCloud(max_font_size=150, max_words=50, background_color="white", stopwords = stop_words).generate(str(x))
 plt.figure()
 plt.title("postive tweets")
 plt.imshow(positive_wordcloud)
@@ -129,5 +131,5 @@ sentiment_counts.plot.pie(ax=ax, autopct='%1.1f%%',  fontsize=12, label="")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC 
+# MAGIC -- you can c&p these coordinates to show the origin of tweets on google maps
 # MAGIC select geo  from tweets.silver where geo is not null  limit 25

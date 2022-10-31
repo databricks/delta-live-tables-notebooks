@@ -11,47 +11,33 @@
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC (pls ignore, I am using this internally)
--- MAGIC * [Twitter Stream S3](https://data-ai-lakehouse.cloud.databricks.com/?o=2847375137997282#notebook/3842290145331493/command/3842290145331494)
--- MAGIC * [Pipeline](https://data-ai-lakehouse.cloud.databricks.com/?o=2847375137997282#joblist/pipelines/e5a33172-4c5c-459b-ab32-c9f3c720fcac)
--- MAGIC * [Huggingface Sentiment Analysis](https://data-ai-lakehouse.cloud.databricks.com/?o=2847375137997282#notebook/3842290145331470)
+-- MAGIC 
+-- MAGIC * [jump to Twitter-Stream-S3 notebook]($./Twitter-Stream-S3)
+-- MAGIC * [jump to Twitter-SentimentAnalysis notebook]($./Twitter-SentimentAnalysis)
+-- MAGIC * [Pipeline](https://data-ai-lakehouse.cloud.databricks.com/?o=2847375137997282#joblist/pipelines/37ff1cdf-0400-4d6d-b22c-b31bb6209a28)
 
 -- COMMAND ----------
 
-CREATE STREAMING LIVE TABLE bronze
-
-COMMENT 'stream raw data from JSON files as is into bronze table
-- we use autoloader for data ingestion of many small files
-- Delta Live Tables performs maintenance tasks on tables every 24 hours. 
-- By default, the system performs a full OPTIMIZE operation followed by VACUUM
-- Streaming: +Ensures exactly-once processing of input rows
--            +Inputs are only read once
-
-- note that the schema is detected automatically'
-
+-- streaming ingest + schema inference with Auto Loader
+CREATE OR REFRESH STREAMING LIVE TABLE bronze
 AS SELECT * FROM cloud_files(
-  "dbfs:/data/twitter_dataeng2", "json"
+  "dbfs:/data/twitter_dais2022", "json"
 )
 
 -- COMMAND ----------
 
-create or replace streaming  live table silver 
-
-(constraint valid_language expect (lang == "en") on violation drop row,
-constraint valid_id expect (id != "") on violation drop row)
-
-comment 'data is cleansed - other languages than EN are dropped'
-
-
-as
-  select id, geo, lang, text from  stream (live.bronze)
+-- constraints policies: track #badrecords/ drop record/ abort processing record 
+CREATE OR REFRESH STREAMING LIVE TABLE silver 
+(CONSTRAINT valid_language EXPECT (lang == "en") ON VIOLATION DROP ROW,
+CONSTRAINT valid_id EXPECT (id != "") ON VIOLATION DROP ROW)
+COMMENT 'data is cleansed - other languages than EN are dropped'
+AS
+  SELECT id, geo, lang, text FROM STREAM (LIVE.bronze)
 
 -- COMMAND ----------
 
--- CREATE OR REPLACE LIVE TABLE has same semantics as CREATE LIVE TABLE 
-create or replace  streaming live table languages
-comment 'table for statistics of different languages
+CREATE OR REFRESH STREAMING LIVE TABLE languages
+COMMENT 'table for statistics of different languages
 that showed up in the pipeline' 
-
-as
-select lang, count(*) as count from  stream (live.bronze) group by lang order by count
+AS
+  SELECT lang, count(*)  AS count FROM STREAM (LIVE.bronze) GROUP BY lang ORDER BY count
