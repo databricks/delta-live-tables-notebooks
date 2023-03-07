@@ -59,7 +59,7 @@ The Terraform does the following deployment
 [Notebook](resources/utils/dms-mysql-cdc-analysis.py)
 
 ## How to run
-[See blog Post](LINK TO BLOG)
+[See blog Post](https://www.databricks.com/blog/2022/09/29/using-streaming-delta-live-tables-and-aws-dms-change-data-capture-mysql.html?blaid=3645474)
 
 ## Troubleshooting/Questions
 * You might run into the following error when running the e2-simple-workspace. This is due a to a race condition when creating the IAM role regiesting the credentials against Databricks. You can just rerun `terraform apply -auto-approve` and it will finish setting up.
