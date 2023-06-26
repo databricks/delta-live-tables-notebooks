@@ -1,4 +1,4 @@
- This is easist way to launch DAIS 2023 [DLT-META](https://github.com/databrickslabs/dlt-meta) demo to your databricks workspace with following steps.
+ # DAIS 2023 [DLT-META](https://github.com/databrickslabs/dlt-meta) DEMO
 
 1. Launch Terminal/Command promt 
 
