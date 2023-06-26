@@ -1,0 +1,5 @@
+Op,dmsTimestamp,customer_id,first_name,last_name,email,address,dob
+U,2022-06-24 19:04:17.000000,181,Kathleen,Ingram,theresacollins@example.com,"75544 Anita Bridge Apt. 227 East Tracey, WV 18287",1983-05-20
+U,2022-06-24 19:04:22.000000,158,Jessica,Daniel,ghull@example.net,"570 Brad Underpass Suite 324 North Seth, AR 69604",1977-03-15
+U,2022-06-24 19:04:27.000000,154,Anthony,Murphy,haileyzamora@example.org,"69808 Vickie Drive Port Kristin, AK 79642",1970-04-08
+U,2022-06-24 19:04:32.000000,296,Kimberly,Valentine,yfleming@example.com,"5210 Giles Skyway Suite 438 Chapmanberg, TX 78608",1966-05-12

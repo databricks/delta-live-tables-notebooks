@@ -1,0 +1,5 @@
+Op,dmsTimestamp,customer_id,first_name,last_name,email,address,dob
+U,2022-06-24 19:04:57.000000,114,Michael,Smith,margarethoover@example.net,USCGC Hopkins FPO AA 77469,1983-11-08
+U,2022-06-24 19:05:02.000000,274,Connie,Bishop,chandlerlinda@example.net,"65583 Huynh Club Apt. 584 Scottfort, OR 32101",2003-10-26
+U,2022-06-24 19:05:07.000000,225,Jared,Moore,charleswebster@example.org,Unit 7353 Box 3637 DPO AP 69750,1993-11-29
+U,2022-06-24 19:05:12.000000,297,Terri,Taylor,moyerkathryn@example.com,"3101 Miguel Lights South Katherine, TN 35986",1977-09-07
