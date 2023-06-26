@@ -1,0 +1,9 @@
+{
+    "expect_or_drop": {
+        "no_rescued_data": "_rescued_data IS NULL",
+        "valid_product_id": "product_id IS NOT NULL"
+    },
+    "expect_or_quarantine": {
+        "quarantine_rule": "_rescued_data IS NOT NULL OR product_id IS NULL"
+    }
+}

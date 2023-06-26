@@ -1,0 +1,166 @@
+[
+   {
+      "data_flow_id": "100",
+      "data_flow_group": "A1",
+      "source_system": "mysql",
+      "source_format": "cloudFiles",
+      "source_details": {
+         "source_database": "customers",
+         "source_table": "customers",
+         "source_path_prod": "{dbfs_path}/resources/data/customers",
+         "source_schema_path": "{dbfs_path}/resources/ddl/customers.ddl"
+      },
+      "bronze_database_prod": "dlt_meta_bronze",
+      "bronze_table": "customers",
+      "bronze_reader_options": {
+         "cloudFiles.format": "csv",
+         "cloudFiles.rescuedDataColumn": "_rescued_data",
+         "header": "true"
+      },
+      "bronze_table_path_prod": "{dbfs_path}/data/bronze/customers",
+      "bronze_data_quality_expectations_json_prod": "{dbfs_path}/conf/dqe/customers.json",
+      "bronze_database_quarantine_prod": "dlt_meta_bronze",
+      "bronze_quarantine_table": "customers_quarantine",
+      "bronze_quarantine_table_path_prod": "{dbfs_path}/data/bronze/customers_quarantine",
+      "silver_database_prod": "dlt_meta_silver",
+      "silver_table": "customers",
+      "silver_cdc_apply_changes": {
+         "keys": [
+            "customer_id"
+         ],
+         "sequence_by": "dmsTimestamp",
+         "scd_type": "2",
+         "apply_as_deletes": "Op = 'D'",
+         "except_column_list": [
+            "Op",
+            "dmsTimestamp",
+            "_rescued_data"
+         ]
+      },
+      "silver_table_path_prod": "{dbfs_path}/data/silver/customers",
+      "silver_transformation_json_prod": "{dbfs_path}/conf/silver_transformations.json"
+   },
+   {
+      "data_flow_id": "101",
+      "data_flow_group": "A1",
+      "source_system": "mysql",
+      "source_format": "cloudFiles",
+      "source_details": {
+         "source_database": "transactions",
+         "source_table": "transactions",
+         "source_path_prod": "{dbfs_path}/resources/data/transactions",
+         "source_schema_path": "{dbfs_path}/resources/ddl/transactions.ddl"
+      },
+      "bronze_database_prod": "dlt_meta_bronze",
+      "bronze_table": "transactions",
+      "bronze_reader_options": {
+         "cloudFiles.format": "csv",
+         "cloudFiles.rescuedDataColumn": "_rescued_data",
+         "header": "true"
+      },
+      "bronze_table_path_prod": "{dbfs_path}/data/bronze/transactions",
+      "bronze_data_quality_expectations_json_prod": "{dbfs_path}/conf/dqe/transactions.json",
+      "bronze_database_quarantine_prod": "dlt_meta_bronze",
+      "bronze_quarantine_table": "transactions_quarantine",
+      "bronze_quarantine_table_path_prod": "{dbfs_path}/data/bronze/transactions_quarantine",
+      "silver_database_prod": "dlt_meta_silver",
+      "silver_table": "transactions",
+      "silver_cdc_apply_changes": {
+         "keys": [
+            "transaction_id"
+         ],
+         "sequence_by": "dmsTimestamp",
+         "scd_type": "2",
+         "apply_as_deletes": "Op = 'D'",
+         "except_column_list": [
+            "Op",
+            "dmsTimestamp",
+            "_rescued_data"
+         ]
+      },
+      "silver_table_path_prod": "{dbfs_path}/data/silver/transactions",
+      "silver_transformation_json_prod": "{dbfs_path}/conf/silver_transformations.json"
+   },
+   {
+      "data_flow_id": "103",
+      "data_flow_group": "A1",
+      "source_system": "mysql",
+      "source_format": "cloudFiles",
+      "source_details": {
+         "source_database": "products",
+         "source_table": "products",
+         "source_path_prod": "{dbfs_path}/resources/data/products",
+         "source_schema_path": "{dbfs_path}/resources/ddl/products.ddl"
+      },
+      "bronze_database_prod": "dlt_meta_bronze",
+      "bronze_table": "products",
+      "bronze_reader_options": {
+         "cloudFiles.format": "csv",
+         "cloudFiles.rescuedDataColumn": "_rescued_data",
+         "header": "true"
+      },
+      "bronze_table_path_prod": "{dbfs_path}/data/bronze/products",
+      "bronze_data_quality_expectations_json_prod": "{dbfs_path}/conf/dqe/products.json",
+      "bronze_database_quarantine_prod": "dlt_meta_quarantine",
+      "bronze_quarantine_table": "products_quarantine",
+      "bronze_quarantine_table_path_prod": "{dbfs_path}/data/bronze/products_quarantine",
+      "silver_database_prod": "dlt_meta_silver",
+      "silver_table": "products",
+      "silver_cdc_apply_changes": {
+         "keys": [
+            "product_id"
+         ],
+         "sequence_by": "dmsTimestamp",
+         "scd_type": "2",
+         "apply_as_deletes": "Op = 'D'",
+         "except_column_list": [
+            "Op",
+            "dmsTimestamp",
+            "_rescued_data"
+         ]
+      },
+      "silver_table_path_prod": "{dbfs_path}/data/silver/products",
+      "silver_transformation_json_prod": "{dbfs_path}/conf/silver_transformations.json"
+   },
+   {
+      "data_flow_id": "104",
+      "data_flow_group": "A1",
+      "source_system": "mysql",
+      "source_format": "cloudFiles",
+      "source_details": {
+         "source_database": "stores",
+         "source_table": "stores",
+         "source_path_prod": "{dbfs_path}/resources/data/stores",
+         "source_schema_path": "{dbfs_path}/resources/ddl/stores.ddl"
+      },
+      "bronze_database_prod": "dlt_meta_bronze",
+      "bronze_table": "stores",
+      "bronze_reader_options": {
+         "cloudFiles.format": "csv",
+         "cloudFiles.rescuedDataColumn": "_rescued_data",
+         "header": "true"
+      },
+      "bronze_table_path_prod": "{dbfs_path}/data/bronze/stores",
+      "bronze_data_quality_expectations_json_prod": "{dbfs_path}/conf/dqe/stores.json",
+      "bronze_database_quarantine_prod": "dlt_meta_bronze",
+      "bronze_quarantine_table": "stores_quarantine",
+      "bronze_quarantine_table_path_prod": "{dbfs_path}/data/bronze/stores_quarantine",
+      "silver_database_prod": "dlt_meta_silver",
+      "silver_table": "stores",
+      "silver_cdc_apply_changes": {
+         "keys": [
+            "store_id"
+         ],
+         "sequence_by": "dmsTimestamp",
+         "scd_type": "2",
+         "apply_as_deletes": "Op = 'D'",
+         "except_column_list": [
+            "Op",
+            "dmsTimestamp",
+            "_rescued_data"
+         ]
+      },
+      "silver_table_path_prod": "{dbfs_path}/data/silver/stores",
+      "silver_transformation_json_prod": "{dbfs_path}/conf/silver_transformations.json"
+   }
+]

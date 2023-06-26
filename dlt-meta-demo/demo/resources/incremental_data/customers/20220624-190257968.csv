@@ -1,0 +1,5 @@
+Op,dmsTimestamp,customer_id,first_name,last_name,email,address,dob
+U,2022-06-24 19:02:36.000000,252,Rebecca,Barrett,camachojason@example.com,"PSC 7550, Box 8562 APO AE 66013",2003-10-09
+U,2022-06-24 19:02:41.000000,238,Steven,Reyes,paige15@example.net,"049 Hughes Court Apt. 635 New Anthonystad, WY 15256",1984-03-26
+U,2022-06-24 19:02:46.000000,282,Erik,Stark,cynthia36@example.net,"633 Williams Shoal Lake Maryfurt, MS 96956",1966-06-18
+U,2022-06-24 19:02:51.000000,105,Amy,Hunter,wattsstephanie@example.net,Unit 9174 Box 6157 DPO AE 47597,1963-08-15

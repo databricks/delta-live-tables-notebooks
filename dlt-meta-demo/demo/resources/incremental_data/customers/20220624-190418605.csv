@@ -1,0 +1,5 @@
+Op,dmsTimestamp,customer_id,first_name,last_name,email,address,dob
+U,2022-06-24 19:03:57.000000,262,Danielle,Bowman,millerjeffrey@example.com,USNS Allen FPO AE 13341,1968-02-20
+U,2022-06-24 19:04:02.000000,15,David,Haas,jacksonbradley@example.net,"3662 Fisher Station Apt. 461 Annland, CA 65559",1988-08-22
+U,2022-06-24 19:04:07.000000,57,Tammy,Stevens,veronica80@example.org,Unit 1427 Box 6117 DPO AE 69357,1991-11-16
+U,2022-06-24 19:04:12.000000,217,Gregory,Perry,fmiller@example.com,"908 Williams Station New Jamesmouth, KY 14694",1998-09-06
