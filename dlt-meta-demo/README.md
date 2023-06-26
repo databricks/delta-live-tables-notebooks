@@ -28,7 +28,7 @@ export DATABRICKS_HOST=<DATABRICKS HOST> # Paste from Step#5
 export DATABRICKS_TOKEN=<DATABRICKS TOKEN> # Paste Token here from Step#6, Account needs permission to create clusters/dlt pipelines.
 ```
 
-6. Run the command ```python launch_demo.py --cloud_provider_name=aws --dbr_version=11.3.x-scala2.12 --dbfs_path=dbfs:/tmp/DLT-META_DAIS```
+6. Run the command ```python launch_demo.py --cloud_provider_name=aws --dbr_version=12.2.x-scala2.12 --dbfs_path=dbfs:/dais-dlt-meta-demo-automated/```
     - cloud_provider_name : aws or azure or gcp
     - db_version : Databricks Runtime Version
     - dbfs_path : Path on your Databricks workspace where demo will be copied for launching DLT-META Pipelines
