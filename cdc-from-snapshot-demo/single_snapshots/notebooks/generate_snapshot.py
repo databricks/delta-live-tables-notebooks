@@ -61,6 +61,7 @@ def create_new_orders(num_orders, current_max_order_id):
 
 # COMMAND ----------
 
+# DBTITLE 1,Randomly Update Records from Existing Orders
 def update_existing_orders(existing_orders, percentage=0.3):
   # Filter the DataFrame to get the oldest pending orders
   num_existing_orders = existing_orders.count()
@@ -87,6 +88,32 @@ def update_existing_orders(existing_orders, percentage=0.3):
 
 # COMMAND ----------
 
+# DBTITLE 1,Randomly Delete from Existing Orders
+def delete_existing_orders(existing_orders, percentage=0.1):
+  # Filter the DataFrame to get the oldest returned orders
+  num_existing_orders = existing_orders.count()
+  num_orders_to_delete = int(num_existing_orders * percentage)
+  oldest_returned_orders_df = (
+    existing_orders
+      .filter(existing_orders.order_status == "returned")
+      .orderBy("order_date")
+      .limit(num_orders_to_delete)
+  )
+
+  # Delete orders randomly from old returned orders associated with even ids
+  # set order_date to current_timestamp
+  deleted_returned_orders_df = (
+    oldest_returned_orders_df[~((oldest_returned_orders_df['order_id'] % 2 == 0) & (oldest_returned_orders_df['order_status'] == 'returned'))]
+  )
+  return deleted_returned_orders_df
+
+# COMMAND ----------
+
+#Drop the database
+# spark.sql(f"DROP DATABASE IF EXISTS {database_name}")
+
+# COMMAND ----------
+
 order_schema = StructType([
     StructField("order_id", IntegerType(), True),
     StructField("price", IntegerType(), True),
@@ -95,41 +122,111 @@ order_schema = StructType([
     StructField("customer_id", StringType(), True),    
     StructField("product_id", IntegerType(), True)    
 ])
-database_name = dbutils.widgets.get("snapshot_source_database")
-table = "orders_snapshot"
-table_name = f"{database_name}.{table}"
+userName = dbutils.entry_point.getDbutils().notebook().getContext().userName().getOrElse(None).split("@")[0].replace(".", "_") # changed it to underline to avoid conflict with catalog creation! kept getting Mojgan catalog not found
+
+catalog_name = "Orders_catalog"
+spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog_name}")
+print(f"Catalog {catalog_name} created successfully.")
+database_name = f"{userName}_orders_db"
+table_name = "orders_snapshots"
 table_exists = spark.catalog.tableExists(table_name)
+
+
+print(f"{catalog_name}")
+print(f"{database_name}")
+print(f"{table_name}")     
+print(table_exists)
 
 # COMMAND ----------
 
+"""
+Set up configuration 
+"""
+# Define the dropdown options
+dropdown_options = ["Pattern 1", "Pattern 2"]
+# Create the dropdown widget
+dbutils.widgets.dropdown("param_value", "Pattern 1", dropdown_options, "Parameter Value:")
+# Define S3 bucket path
+dbutils.widgets.text("source_s3_path", "s3a://one-env/snapshots/", "Source S3 Path:")
+source_s3_path = dbutils.widgets.get("source_s3_path") #"s3a://one-env/snapshots/"
+# Get the parameter value
+param_value = dbutils.widgets.get("param_value") #set pattern as a widget in notebook, as a parameter in task
+print(param_value)
+
+# COMMAND ----------
+
+from datetime import datetime
+
 spark.sql(f"""create database if not exists {database_name}""")
+spark.sql(f"USE {database_name}")
+spark.sql(f"USE CATALOG {catalog_name}")
+
 if table_exists:
-    print(f"{table_name} already exist. Creating new snapshots with updates and inserts")
+    print(f"{table_name} already exists. Creating new snapshots with updates and inserts, and deletes")
     existing_orders = spark.table(table_name)
     order_updates_df = update_existing_orders(existing_orders)
-    print(f"number of updates: {order_updates_df.count()}") 
+    print(f"number of updates: {order_updates_df.count()}")
+    order_deletes_df = delete_existing_orders(existing_orders)
+    print(f"number of deletes: {order_deletes_df .count()}")
     current_max_order_id = int(existing_orders.selectExpr("max(order_id)").collect()[0][0])
-    print(current_max_order_id)
+    print(f"Current Max order Id: {current_max_order_id}")
     new_orders = create_new_orders(10, current_max_order_id)
-    print(f"number of new orders: {len(new_orders)}")
     new_orders_df = spark.createDataFrame(new_orders, schema=order_schema)
+    print(f"number of new orders: {len(new_orders)}")
 
-    remaining_existing_orders_df = existing_orders.exceptAll(order_updates_df)  
-    (
+    remaining_existing_orders_df1 = existing_orders.join(order_updates_df, on="order_id", how="left_anti")
+    remaining_existing_orders_df = remaining_existing_orders_df1 .join(order_deletes_df, on="order_id", how="left_anti")
+    print(f"Existing rows retained: {remaining_existing_orders_df.count()}")
+ 
+    if param_value == 'Pattern 1':
+      (
         remaining_existing_orders_df
         .union(order_updates_df)
         .union(new_orders_df)
         .write
         .format("delta")
-        .mode("overwrite")
+        .mode("overwrite") # for pattern 1
         .saveAsTable(table_name)
-    )  
-    
+      )
+      df = remaining_existing_orders_df.union(order_updates_df).union(new_orders_df)
+      print("df in pattern 1 is:", display(df))
+    else:
+      df = remaining_existing_orders_df.union(order_updates_df).union(new_orders_df)
+      print("df in pattern 2 is:", display(df))
+      current_datetime = datetime.now()
+      datetime_str = current_datetime.strftime('"%Y-%m-%d %H"')
+      # Construct the output path with the date
+      output_path = source_s3_path + "datetime=" +datetime_str
+      print("output_path", output_path)
+      (
+          df
+          .write
+          .format("delta")
+          .mode("overwrite") 
+          .save(output_path)
+      )
 
 else:
-    print(f"{table_name} doesn't exist. Creating orders table with initial snapshots data")
+    print(f"{table_name} doesn't exist. Creating orders table with initial snapshots data.")
     # Generate initial orders
-    initial_orders = generate_order_data(100,1)
+    initial_orders = generate_order_data(100, 1)
     initial_orders_snapshot = spark.createDataFrame(initial_orders, schema=order_schema)
-    initial_orders_snapshot.write.format("delta").mode("overwrite").saveAsTable(table_name)
 
+    if param_value == 'Pattern 1':
+      initial_orders_snapshot.write.format("delta").mode("overwrite").saveAsTable(table_name)
+
+    else:
+      print("pattern 2")
+      initial_orders_snapshot.write.format("delta").mode("overwrite").saveAsTable(table_name)
+      current_datetime = datetime.now()
+      datetime_str = current_datetime.strftime('"%Y-%m-%d %H"')
+      # Construct the output path with the date
+      output_path = source_s3_path + "datetime=" +datetime_str
+      print("output_path", output_path)
+      (
+          initial_orders_snapshot
+          .write
+          .format("delta")
+          .mode("overwrite") 
+          .save(output_path)
+      )
