@@ -122,17 +122,26 @@ order_schema = StructType([
     StructField("customer_id", StringType(), True),    
     StructField("product_id", IntegerType(), True)    
 ])
-userName = dbutils.entry_point.getDbutils().notebook().getContext().userName().getOrElse(None).split("@")[0].replace(".", "_") # changed it to underline to avoid conflict with catalog creation! kept getting Mojgan catalog not found
+# userName = dbutils.entry_point.getDbutils().notebook().getContext().userName().getOrElse(None).split("@")[0].replace(".", "_") # changed it to underline to avoid conflict with catalog creation! 
 
-catalog_name = "Orders_catalog"
-spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog_name}")
-print(f"Catalog {catalog_name} created successfully.")
-database_name = f"{userName}_orders_db"
-table_name = "orders_snapshots"
+# catalog_name = "orders" ## with UC <> DLT
+# spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog_name}")
+# print(f"Catalog {catalog_name} created successfully.")
+# spark.catalog.setCurrentCatalog(f"{catalog_name}")
+
+# database_name = f"{userName}_ordersdb"
+
+database_name = dbutils.widgets.get("snapshot_source_database")
+spark.sql(f"CREATE DATABASE IF NOT EXISTS `{database_name}` LOCATION '/user/hive/warehouse/{database_name}.db'")
+
+# Check if the database was created and exists
+print(f"{database_name} database already exists: {database_name in spark.catalog.listDatabases()}")
+
+table_name = f"{database_name}.orders_snapshot"
+# table_name = "orders_snapshots"
 table_exists = spark.catalog.tableExists(table_name)
 
-
-print(f"{catalog_name}")
+# print(f"{catalog_name}")
 print(f"{database_name}")
 print(f"{table_name}")     
 print(table_exists)
@@ -157,9 +166,15 @@ print(param_value)
 
 from datetime import datetime
 
-spark.sql(f"""create database if not exists {database_name}""")
-spark.sql(f"USE {database_name}")
-spark.sql(f"USE CATALOG {catalog_name}")
+database_name = dbutils.widgets.get("snapshot_source_database")
+spark.sql(f"CREATE DATABASE IF NOT EXISTS `{database_name}`")
+# Set default database for current session
+spark.catalog.setCurrentDatabase(database_name)
+
+# Check if the database is set as default
+print(spark.catalog.currentDatabase())
+# spark.sql(f"USE {database_name}")
+# spark.sql(f"USE CATALOG {catalog_name}")
 
 if table_exists:
     print(f"{table_name} already exists. Creating new snapshots with updates and inserts, and deletes")

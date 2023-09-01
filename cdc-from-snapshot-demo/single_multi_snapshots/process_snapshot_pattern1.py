@@ -1,5 +1,4 @@
 # Databricks notebook source
-
 import dlt
 from pyspark.sql.functions import col, expr
 from datetime import datetime, timedelta
