@@ -4,18 +4,18 @@ workspace:
   host: https://e2-demo-field-eng.cloud.databricks.com
 resources:
   pipelines:
-    single_snapshot_dlt_pipeline:
-      name: "${workspace.current_user.id}] DLT Apply Changes from Single Snapshot"
-      target: "single_snapshot_${workspace.current_user.id}"
+    dlt_snapshot_ingestion_pattern1:
+      name: "DLT Apply Changes from Snapshot - Pattern1 [${workspace.current_user.id}]"
+      target: "snapshot_pattern1_${workspace.current_user.id}"
       development: true
       continuous: false
       channel: "CURRENT"
       photon: false
       libraries:
         - notebook:
-            path: ./single_multi_snapshots/notebooks/process_snapshot_pattern1.py
+            path: ./src/notebooks/process_snapshot_pattern1.py
         - notebook:
-            path: ./single_multi_snapshots/notebooks/order_count_by_status_pattern1.sql   
+            path: ./src/notebooks/order_count_by_status_pattern1.sql   
       edition: "ADVANCED"
       clusters:
         - label: "default"
@@ -27,18 +27,18 @@ resources:
       configuration:
         snapshot_source_database: ${workspace.current_user.id}_snapshots   
 
-    multi_snapshot_dlt_pipeline:
-      name: "${workspace.current_user.id} DLT Apply Changes from multiple Snapshots"
-      target: "multi_snapshot_${workspace.current_user.id}"
+    dlt_snapshot_ingestion_pattern2:
+      name: "DLT Apply Changes from Snapshot - Pattern2 [${workspace.current_user.id}]"
+      target: "snapshot_pattern2_${workspace.current_user.id}"
       development: true
       continuous: false
       channel: "CURRENT"
       photon: false
       libraries:
         - notebook:
-            path: ./single_multi_snapshots/notebooks/process_snapshot_pattern2.py
+            path: ./src/notebooks/process_snapshot_pattern2.py
         - notebook:
-            path: ./single_multi_snapshots/notebooks/order_count_by_status_pattern2.sql   
+            path: ./src/notebooks/order_count_by_status_pattern2.sql   
       edition: "ADVANCED"
       clusters:
         - label: "default"
@@ -50,17 +50,24 @@ resources:
             mode: "ENHANCED"
             # num_workers: 1
       configuration:
-        snapshot_root_path: s3a://one-env/snapshots/ 
+        snapshot_root_path: s3://one-env/snapshot_ingestion_demo/orders/snapshots_${workspace.current_user.id}
 
   jobs:
-    single_snapshot_job:
-      name: "${workspace.current_user.id}] Single Snapshot Demo"
+    dlt_snapshot_ingestion_pattern1_job:
+      name: "DLT Snapshot Ingestion - Pattern1 [${workspace.current_user.id}]"
+      job_clusters: 
+        - job_cluster_key: job_cluster
+          new_cluster:
+                spark_version: 12.2.x-scala2.12
+                node_type_id: i3.xlarge
+                num_workers: 1
       tasks:
         - task_key: generate_orders_snapshot
-          existing_cluster_id: 0329-145545-rugby794
+          job_cluster_key: job_cluster
           notebook_task:
-            notebook_path: ./single_multi_snapshots/notebooks/generate_snapshot.py
+            notebook_path: ./src/notebooks/generate_snapshot.py
             base_parameters:
+              snapshot_pattern: "Pattern 1"
               snapshot_source_database: ${workspace.current_user.id}_snapshots 
         - task_key: cdc_from_snapshot
           depends_on: [{
@@ -68,25 +75,34 @@ resources:
                     }]
           run_if: ALL_SUCCESS
           pipeline_task:
-            pipeline_id: ${resources.pipelines.single_snapshot_dlt_pipeline.id}
+            pipeline_id: ${resources.pipelines.dlt_snapshot_ingestion_pattern1.id}
             full_refresh: false
 
-    multi_snapshots_job:
-      name: "${workspace.current_user.id}] multiple Snapshots Demo"
+    dlt_snapshot_ingestion_pattern2_job:
+      name: "DLT Snapshot Ingestion - Pattern2 [${workspace.current_user.id}]"
+      job_clusters: 
+        - job_cluster_key: job_cluster
+          new_cluster:
+                spark_version: 12.2.x-scala2.12
+                node_type_id: i3.xlarge
+                num_workers: 1
+                aws_attributes:
+                  instance_profile_arn: "arn:aws:iam::997819012307:instance-profile/one-env-databricks-access"
       tasks:
         - task_key: generate_orders_snapshot
-          existing_cluster_id: 0329-145545-rugby794
+          job_cluster_key: job_cluster
           notebook_task:
-            notebook_path: ./single_multi_snapshots/notebooks/generate_snapshot.py
+            notebook_path: ./src/notebooks/generate_snapshot.py
             base_parameters:
-              snapshot_source_database: ${workspace.current_user.id}_snapshots  
+              snapshot_pattern: "Pattern 2"
+              snapshot_source_path: s3://one-env/snapshot_ingestion_demo/orders/snapshots_${workspace.current_user.id}
         - task_key: cdc_from_snapshot
           depends_on: [{
                         "task_key": "generate_orders_snapshot"
                     }]
           run_if: ALL_SUCCESS
           pipeline_task:
-            pipeline_id: ${resources.pipelines.multi_snapshot_dlt_pipeline.id}
+            pipeline_id: ${resources.pipelines.dlt_snapshot_ingestion_pattern2.id}
             full_refresh: false
 
 
