@@ -94,7 +94,7 @@ resources:
                 node_type_id: i3.xlarge
                 num_workers: 1
                 aws_attributes:
-                  instance_profile_arn: "arn:aws:iam::997819012307:instance-profile/one-env-databricks-access"
+                  instance_profile_arn: ${var.my_instance_profile_arn}
       tasks:
         - task_key: generate_orders_snapshot
           job_cluster_key: job_cluster
@@ -102,7 +102,7 @@ resources:
             notebook_path: ./src/notebooks/generate_snapshot.py
             base_parameters:
               snapshot_pattern: "Pattern 2"
-              snapshot_source_path: s3://one-env/snapshot_ingestion_demo/orders/snapshots_${workspace.current_user.id}
+              snapshot_source_path: ${var.my_s3_bucket}/snapshot_ingestion_demo/orders/snapshots_${workspace.current_user.id}
         - task_key: cdc_from_snapshot
           depends_on: [{
                         "task_key": "generate_orders_snapshot"
