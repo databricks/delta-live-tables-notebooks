@@ -22,6 +22,29 @@ resources:
       configuration:
         snapshot_source_database: ${workspace.current_user.id}_snapshots   
 
+    multi_snapshot_dlt_pipeline:
+      name: "${workspace.current_user.id} DLT Apply Changes from multiple Snapshots"
+      target: "multi_snapshot_${workspace.current_user.id}"
+      development: true
+      continuous: false
+      channel: "CURRENT"
+      photon: false
+      libraries:
+        - notebook:
+            path: ./single_multi_snapshots/notebooks/process_snapshot_pattern2.py
+        - notebook:
+            path: ./single_multi_snapshots/notebooks/order_count_by_status_pattern2.sql   
+      edition: "ADVANCED"
+      clusters:
+        - label: "default"
+          autoscale:
+            min_workers": 1,
+            max_workers": 5,
+            mode: "ENHANCED"
+            # num_workers: 1
+      configuration:
+        snapshot_root_path: s3a://one-env/snapshots/ 
+
   jobs:
     single_snapshot_job:
       name: "[${bundle.environment}-${workspace.current_user.id}] Single Snapshot Demo"
