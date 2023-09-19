@@ -22,6 +22,8 @@ snapshot_source_path = dbutils.widgets.get("snapshot_source_path")
 database_name = dbutils.widgets.get("snapshot_source_database")
 table_name = f"{database_name}.orders_snapshot"
 print(snapshot_pattern)
+print(f"{database_name}")
+print(f"{table_name}") 
 
 # COMMAND ----------
 
@@ -161,12 +163,21 @@ def get_incremental_order_snapshot(pattern):
   print(f"number of deletes: {order_deletes_df .count()}")
   current_max_order_id = int(existing_orders.selectExpr("max(order_id)").collect()[0][0])
   print(f"Current Max order Id: {current_max_order_id}")
+
+  # ensure all dataframes have the same schema
+  common_columns = ['order_id', 'price', 'order_status', 'order_date', 'customer_id', 'product_id']
+  existing_orders = existing_orders.select(*common_columns)
+  order_updates_df = order_updates_df.select(*common_columns)
+
+  order_deletes_df = order_deletes_df.select(*common_columns)
+
   new_orders = create_new_orders(10, current_max_order_id)
-  new_orders_df = spark.createDataFrame(new_orders, schema=order_schema)
+  new_orders_df = spark.createDataFrame(new_orders, schema=order_schema).select(*common_columns)
   print(f"number of new orders: {len(new_orders)}")
 
   existing_orders_with_new_udpates = existing_orders.join(order_updates_df, on="order_id", how="left_anti")
-  existing_orders_with_updates_and_deletes = existing_orders_with_new_udpates .join(order_deletes_df, on="order_id", how="left_anti")
+  existing_orders_with_updates_and_deletes = existing_orders_with_new_udpates.join(order_deletes_df, on="order_id", how="left_anti")
+  print(f"existing_orders_with_updates_and_deletes: {existing_orders_with_updates_and_deletes.count()}")
 
   new_snapshot = (
     existing_orders_with_updates_and_deletes
@@ -185,7 +196,7 @@ The order snapshot data will be written to the delta table {table_name}.
 Every new snapshot data will overwrite the existing delta table.""")
   table_exists = spark.catalog.tableExists(table_name)
   if table_exists:
-      print(f"Previous snapshot found in table {table_name}. Creating new snapshots with updates and inserts, and deletes") 
+      print(f"Previous snapshot found in table {table_name}. New snapshots are created with updates and inserts, and deletes") 
       new_snapshot = get_incremental_order_snapshot(snapshot_pattern)
       # overwrite the snapshot delta table with new new snapshot      
       (
@@ -196,7 +207,7 @@ Every new snapshot data will overwrite the existing delta table.""")
            .saveAsTable(table_name)
       )
   else:
-      print(f"Creating initial orders snapshot and writing to a delta table {table_name}") 
+      print(f"{table_name} doesn't exist. Creating orders table with initial snapshots data.")
       spark.sql(f"CREATE DATABASE IF NOT EXISTS `{database_name}`")
       initial_snapshot = get_initial_order_snapshot()
       (
@@ -225,7 +236,7 @@ The new path is constructured as: /<base_path>/datetime=yyyy-mm-dd hh""")
   datetime_str = current_datetime.strftime('"%Y-%m-%d %H"')
   snapshot_path = snapshot_source_path + "/datetime=" +datetime_str
   if path_exists:
-      print(f"Previous snapshots Found at path  {snapshot_source_path}. Creating new snapshots with updates and inserts, and deletes") 
+      print(f"Previous snapshots Found at path  {snapshot_source_path}. New snapshots are created with updates and inserts, and deletes") 
       new_snapshot = get_incremental_order_snapshot(snapshot_pattern)     
       # overwrite the snapshot delta table with new new snapshot      
       (
@@ -236,7 +247,7 @@ The new path is constructured as: /<base_path>/datetime=yyyy-mm-dd hh""")
            .save(snapshot_path)
       )
   else:
-      print(f"Creating initial orders snapshot and writing to path {snapshot_path} in Parquet format") 
+      print(f"Initial orders snapshot are created and written to path {snapshot_path} in Parquet format") 
       initial_snapshot = get_initial_order_snapshot()
       (
         initial_snapshot
