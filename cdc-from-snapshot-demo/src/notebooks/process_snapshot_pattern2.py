@@ -38,28 +38,28 @@ print(f"The earliest datetime in the bucket is: {earliest_datetime_str}")
 
 def next_snapshot_and_version(latest_snapshot_datetime):
   latest_datetime_str = latest_snapshot_datetime or earliest_datetime_str 
-
-  # Convert the earliest datetime back to a string if needed
-  # latest_datetime_str = earliest_datetime_str
-  
-  latest_datetime = datetime.strptime(latest_datetime_str, '"%Y-%m-%d %H"')
-  print(latest_datetime)
-
-  # Calculate the next datetime
-  increment = timedelta(hours=1)  # Increment by 1 hour
-  next_datetime = latest_datetime + increment 
-  print(f"The next datetime in the bucket is: {next_datetime}")
-
-  # Convert the next_datetime to a string with the desired format
-  next_snapshot_datetime= next_datetime.strftime('"%Y-%m-%d %H"')
-  snapshot_path = snapshot_root_path + "/datetime={}".format(next_snapshot_datetime) # TODO: Review this Morgan
-  print("reading from snapshot " + snapshot_path)
-
-  if (exist(snapshot_path)):
-    return(spark.read.format("parquet").load(snapshot_path), next_snapshot_datetime)
+  if latest_snapshot_datetime is None:
+    return (spark.read.format("parquet").load(snapshot_root_path+"/datetime={}".format(earliest_datetime_str)), earliest_datetime_str)
   else:
-    # No snapshot available
-    return None 
+  
+    latest_datetime = datetime.strptime(latest_datetime_str, '"%Y-%m-%d %H"')
+    print(latest_datetime)
+
+    # Calculate the next datetime
+    increment = timedelta(hours=1)  # Increment by 1 hour
+    next_datetime = latest_datetime + increment 
+    print(f"The next datetime in the bucket is: {next_datetime}")
+
+    # Convert the next_datetime to a string with the desired format
+    next_snapshot_datetime= next_datetime.strftime('"%Y-%m-%d %H"')
+    snapshot_path = snapshot_root_path + "/datetime={}".format(next_snapshot_datetime) # TODO: Review this Morgan
+    print("reading from snapshot " + snapshot_path)
+
+    if (exist(snapshot_path)):
+      return(spark.read.format("parquet").load(snapshot_path), next_snapshot_datetime) 
+    else:
+      # No snapshot available
+      return None 
   
   """
 ##Create the target table 
