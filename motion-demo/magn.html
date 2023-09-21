@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Streaming Data Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+    <style>
+        .btn-custom {
+            font-size: 2rem;
+            border-radius: 25px; 
+        }
+
+        
+
+        .btn-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+
+        .magnitude-centered {
+            display: flex;
+            font-size: 2rem;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body class="container">
+    <h1 class="my-4">Streaming Data V1.6</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card text-center">
+                <div class="card-body magnitude-centered magnitude-card-body">
+                    <div>
+
+                        <p class="card-text fs-1 fw-bold" id="magnitude"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card text-center">
+                <div class="card-body magnitude-centered">
+                    <div>
+                        <p class="card-text fs-1 fw-bold" id="ascii"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button id="permissionButton" class="btn btn-secondary btn-lg w-90 py-4 mt-4 btn-custom btn-bottom">  START  </button>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.103.0.min.js"></script>
+    <script>
+        const magnitudeElement = document.getElementById('magnitude');
+        const permissionButton = document.getElementById('permissionButton');
+
+        let isListening = false;
+        let dataToSend = null;
+
+        const titleElement = document.getElementsByClassName('card-title')[0]; // Add this line
+        let asciiCounter = 0;
+        const asciiArt = ["*----", "-*---", "--*--", "---*-", "----*"];
+        const asciiElement = document.getElementById('ascii');
+
+
+
+        AWS.config.region = 'us-east-1'; // Replace with your preferred region
+        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+            IdentityPoolId: 'us-east-1:ffffffff-ddddd-zzzzz-yyyyy-xxxxxxxxx',
+        });
+
+        const kinesis = new AWS.Kinesis({
+            apiVersion: '2013-12-02'
+        });
+        const my_UUID = create_UUID();
+
+
+        const events = ['*----', '-*---', '--*--', '---*-', '----*'];
+
+        const requestPermission = () => {
+            if (!isListening) {
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    DeviceMotionEvent.requestPermission()
+                        .then(permissionState => {
+                            if (permissionState === 'granted') {
+                                startListening();
+                            }
+                        })
+                        .catch(console.error);
+                } else {
+                    startListening();
+                }
+            } else {
+                stopListening();
+            }
+        };
+
+        const startListening = () => {
+            window.addEventListener('devicemotion', handleMotionEvent);
+            isListening = true;
+            permissionButton.textContent = '  STOP  ';
+        };
+
+        const stopListening = () => {
+            window.removeEventListener('devicemotion', handleMotionEvent);
+            isListening = false;
+            permissionButton.textContent = 'continue';
+            magnitudeElement.innerHTML = "stopped";
+            //magnitudeElement.innerHTML = '';
+        };
+
+        let lastSentTime = 0;
+
+        const handleMotionEvent = event => {
+            const acceleration = event.acceleration;
+            const magnitude = Math.sqrt(acceleration.x ** 2 + acceleration.y ** 2 + acceleration.z ** 2);
+            const scaledMagnitude = Math.round(magnitude);
+
+            const currentTime = new Date().getTime();
+            const magnitudeCardBody = document.querySelector('.magnitude-card-body');
+
+
+            // Only send event if more than x ms have passed since last sent event
+            if (currentTime - lastSentTime > 200) {
+
+
+                dataToSend = JSON.stringify({
+                    magnitude: scaledMagnitude,
+                    time: new Date().toISOString(),
+                    device: my_UUID
+                });
+
+                var params = {
+                    Data: dataToSend,
+                    PartitionKey: 'partition-' + my_UUID,
+                    StreamName: 'dais2023'
+                };
+                kinesis.putRecord(params, function (err, data) {
+                    if (err) console.log(err, err.stack); // an error occurred
+                    else console.log(data); // successful response
+                });
+
+                // Update lastSentTime
+                lastSentTime = currentTime;
+
+                magnitudeElement.innerHTML = "magnitude: " + scaledMagnitude;
+                //magnitudeElement.style.backgroundColor = getColor(scaledMagnitude);
+
+                magnitudeCardBody.style.backgroundColor = getColor(scaledMagnitude);
+                asciiElement.innerHTML = events[asciiCounter];
+
+                asciiCounter = (asciiCounter + 1) % 5;  // Add this line
+
+            }
+        };
+
+        function getColor(value) {
+            // Return green for values 0-2, yellow for values 3-8, and red for values 9 and above
+            if (value <= 2) {
+                return 'green';
+            } else if (value <= 8) {
+                return 'yellow';
+            } else {
+                return 'red';
+            }
+        }
+
+
+        permissionButton.addEventListener('click', requestPermission);
+
+        function create_UUID() {
+            var dt = new Date().getTime();
+            var uuid = 'client-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = (dt + Math.random() * 16) % 16 | 0;
+                dt = Math.floor(dt / 16);
+                return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            return uuid;
+        }
+    </script>
+</body>
+
+</html>
