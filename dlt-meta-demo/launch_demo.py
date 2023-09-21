@@ -1,4 +1,4 @@
-"""Inegration tests script."""
+"""DLT-META DAIS DEMO script."""
 import os
 import time
 import uuid
