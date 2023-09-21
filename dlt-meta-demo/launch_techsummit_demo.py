@@ -1,4 +1,4 @@
-"""Inegration tests script."""
+"""Techsummit demo runner script."""
 import time
 import uuid
 import argparse
