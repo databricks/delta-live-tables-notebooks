@@ -47,42 +47,6 @@ def generate_order_data(num_orders, start_order_id):
   start_date = end_date - timedelta(days=30)
   orders = []
 
-  # # Create sets to keep track of unique order_ids, customer_ids, and product_ids
-  # unique_order_ids = set()
-  # unique_customer_ids = set()
-  # unique_product_ids = set()
-
-  # while len(orders) < num_orders:
-  #       order_id = start_order_id + len(orders)  # Ensure unique order_id
-  #       customer_id = str(randint(10001, 20000))
-  #       product_id = randint(2000, 2100)
-
-  #       # Check if the generated IDs are unique; if not, generate new ones
-  #       while (
-  #           order_id in unique_order_ids
-  #           or customer_id in unique_customer_ids
-  #           or product_id in unique_product_ids
-  #       ):
-  #           order_id = start_order_id + len(orders)
-  #           customer_id = str(randint(10001, 20000))
-  #           product_id = randint(2000, 2100)
-
-  #       unique_order_ids.add(order_id)
-  #       unique_customer_ids.add(customer_id)
-  #       unique_product_ids.add(product_id)
-
-  #       # Generate random timedelta for the current order_id
-  #       days_offset = uniform(0, num_orders)  # Uniform random float between 0 and num_orders
-  #       seconds_offset = uniform(0, (end_date - start_date).total_seconds())
-  #       random_timedelta = timedelta(seconds=seconds_offset)
-
-  #       order_date = start_date + random_timedelta
-  #       order_date_str = order_date.strftime("%Y-%m-%d %H:%M:%S")
-  #       price = fake.random_int(min=10, max=1000)
-        
-        # Randomly decide whether the order status will be "re-ordered"/"pending"
-        # or any other status with 70% probability
-
   for order_id in range(start_order_id, num_orders + start_order_id):
         # Generate random timedelta for the current order_id
         days_offset = uniform(0, num_orders)  # Uniform random float between 0 and num_orders
