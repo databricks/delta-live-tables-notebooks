@@ -52,13 +52,14 @@ def next_snapshot_and_version(latest_snapshot_datetime):
 
     # Convert the next_datetime to a string with the desired format
     next_snapshot_datetime= next_datetime.strftime('"%Y-%m-%d %H"')
-    snapshot_path = snapshot_root_path + "/datetime={}".format(next_snapshot_datetime) # TODO: Review this Morgan
+    snapshot_path = snapshot_root_path + "/datetime={}".format(next_snapshot_datetime) 
     print("reading from snapshot " + snapshot_path)
 
     if (exist(snapshot_path)):
       return(spark.read.format("parquet").load(snapshot_path), next_snapshot_datetime) 
     else:
       # No snapshot available
+      print("No snapshot available")
       return None 
   
   """
