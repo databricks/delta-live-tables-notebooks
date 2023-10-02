@@ -214,8 +214,9 @@ Every new snapshot data will overwrite the existing delta table.""")
       print(f"{table_name} doesn't exist. Creating orders table with initial snapshots data.")
       spark.sql(f"CREATE DATABASE IF NOT EXISTS `{database_name}`")
       initial_snapshot = get_initial_order_snapshot()
+      dedup_initial_snapshot = initial_snapshot.dropDuplicates(subset=["order_id","price", "order_status", "customer_id", "product_id"])
       (
-        initial_snapshot
+        dedup_initial_snapshot
           .write
           .format("delta")
           .mode("overwrite")
@@ -254,8 +255,9 @@ The new path is constructured as: /<base_path>/datetime=yyyy-mm-dd hh""")
   else:
       print(f"Initial orders snapshot are created and written to path {snapshot_path} in Parquet format") 
       initial_snapshot = get_initial_order_snapshot()
+      dedup_initial_snapshot = initial_snapshot.dropDuplicates(subset=["order_id","price", "order_status", "customer_id", "product_id"])
       (
-        initial_snapshot
+        dedup_initial_snapshot
           .write
           .format("parquet")
           .mode("overwrite")
