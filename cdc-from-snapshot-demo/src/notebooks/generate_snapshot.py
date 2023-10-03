@@ -1,11 +1,4 @@
 # Databricks notebook source
-pip
-install
-Faker
-
-# COMMAND ----------
-
-dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -32,7 +25,6 @@ print(f"Table Name: {table_name}")
 from faker import Faker
 from datetime import datetime, timedelta
 from random import randint, choice, uniform
-import uuid
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
 
@@ -205,78 +197,78 @@ if snapshot_pattern == 'Pattern 1':
     print(f"""Generating Order Snapshot Data for Pattern {snapshot_pattern}. 
 The order snapshot data will be written to the delta table {table_name}.
 Every new snapshot data will overwrite the existing delta table.""")
-table_exists = spark.catalog.tableExists(table_name)
-if table_exists:
-    print(
-        f"Previous snapshot found in table {table_name}. New snapshots are created with updates and inserts, and deletes")
-    new_snapshot = get_incremental_order_snapshot(snapshot_pattern)
+    table_exists = spark.catalog.tableExists(table_name)
+    if table_exists:
+        print(
+            f"Previous snapshot found in table {table_name}. New snapshots are created with updates and inserts, and deletes")
+        new_snapshot = get_incremental_order_snapshot(snapshot_pattern)
 
-    # Deduplicate the DataFrame based on specific columns and retain the first appearance
-    dedup_new_snapshot = new_snapshot.dropDuplicates(
-        subset=["order_id", "price", "order_status", "customer_id", "product_id"])
-    # overwrite the snapshot delta table with new snapshot
-    (
-        dedup_new_snapshot
-        .write
-        .format("delta")
-        .mode("overwrite")
-        .saveAsTable(table_name)
-    )
-else:
-    print(f"{table_name} doesn't exist. Creating orders table with initial snapshots data.")
-    spark.sql(f"CREATE DATABASE IF NOT EXISTS `{database_name}`")
-    initial_snapshot = get_initial_order_snapshot()
-    dedup_initial_snapshot = initial_snapshot.dropDuplicates(
-        subset=["order_id", "price", "order_status", "customer_id", "product_id"])
-    (
-        dedup_initial_snapshot
-        .write
-        .format("delta")
-        .mode("overwrite")
-        .saveAsTable(table_name)
-    )
+        # Deduplicate the DataFrame based on specific columns and retain the first appearance
+        dedup_new_snapshot = new_snapshot.dropDuplicates(
+            subset=["order_id", "price", "order_status", "customer_id", "product_id"])
+        # overwrite the snapshot delta table with new snapshot
+        (
+            dedup_new_snapshot
+            .write
+            .format("delta")
+            .mode("overwrite")
+            .saveAsTable(table_name)
+        )
+    else:
+        print(f"{table_name} doesn't exist. Creating orders table with initial snapshots data.")
+        spark.sql(f"CREATE DATABASE IF NOT EXISTS `{database_name}`")
+        initial_snapshot = get_initial_order_snapshot()
+        dedup_initial_snapshot = initial_snapshot.dropDuplicates(
+            subset=["order_id", "price", "order_status", "customer_id", "product_id"])
+        (
+            dedup_initial_snapshot
+            .write
+            .format("delta")
+            .mode("overwrite")
+            .saveAsTable(table_name)
+        )
 
 elif snapshot_pattern == 'Pattern 2':
-print(f"""Generating Order Snapshot Data for Pattern {snapshot_pattern}. 
+    print(f"""Generating Order Snapshot Data for Pattern {snapshot_pattern}. 
 The order snapshot data will be written to the given snapshot path: {snapshot_source_path}.
 Every new snapshot data will be written to a new path in parquet formats. 
 The new path is constructed as: /<base_path>/datetime=yyyy-mm-dd hh""")
 
-path_exists = False
-try:
-    path_exists = len(dbutils.fs.ls(snapshot_source_path)) >= 1 if len(snapshot_source_path) > 0 else False
-except:
     path_exists = False
+    try:
+        path_exists = len(dbutils.fs.ls(snapshot_source_path)) >= 1 if len(snapshot_source_path) > 0 else False
+    except:
+        path_exists = False
 
-# construct a path for this snapshot
-current_datetime = datetime.now()
-datetime_str = current_datetime.strftime('"%Y-%m-%d %H"')
-snapshot_path = snapshot_source_path + "/datetime=" + datetime_str
-if path_exists:
-    print(
-        f"Previous snapshots Found at path  {snapshot_source_path}. New snapshots are created with updates and inserts, and deletes")
-    new_snapshot = get_incremental_order_snapshot(snapshot_pattern)
-    dedup_new_snapshot = new_snapshot.dropDuplicates(
-        subset=["order_id", "price", "order_status", "customer_id", "product_id"])
-    # overwrite the snapshot delta table with new new snapshot
-    (
-        dedup_new_snapshot
-        .write
-        .format("parquet")
-        .mode("overwrite")
-        .save(snapshot_path)
-    )
+    # construct a path for this snapshot
+    current_datetime = datetime.now()
+    datetime_str = current_datetime.strftime('"%Y-%m-%d %H"')
+    snapshot_path = snapshot_source_path + "/datetime=" + datetime_str
+    if path_exists:
+        print(
+            f"Previous snapshots Found at path  {snapshot_source_path}. New snapshots are created with updates and inserts, and deletes")
+        new_snapshot = get_incremental_order_snapshot(snapshot_pattern)
+        dedup_new_snapshot = new_snapshot.dropDuplicates(
+            subset=["order_id", "price", "order_status", "customer_id", "product_id"])
+        # overwrite the snapshot delta table with new new snapshot
+        (
+            dedup_new_snapshot
+            .write
+            .format("parquet")
+            .mode("overwrite")
+            .save(snapshot_path)
+        )
+    else:
+        print(f"Initial orders snapshot are created and written to path {snapshot_path} in Parquet format")
+        initial_snapshot = get_initial_order_snapshot()
+        dedup_initial_snapshot = initial_snapshot.dropDuplicates(
+            subset=["order_id", "price", "order_status", "customer_id", "product_id"])
+        (
+            dedup_initial_snapshot
+            .write
+            .format("parquet")
+            .mode("overwrite")
+            .save(snapshot_path)
+        )
 else:
-    print(f"Initial orders snapshot are created and written to path {snapshot_path} in Parquet format")
-    initial_snapshot = get_initial_order_snapshot()
-    dedup_initial_snapshot = initial_snapshot.dropDuplicates(
-        subset=["order_id", "price", "order_status", "customer_id", "product_id"])
-    (
-        dedup_initial_snapshot
-        .write
-        .format("parquet")
-        .mode("overwrite")
-        .save(snapshot_path)
-    )
-else:
-raise ValueError(f"Unknown Pattern - {pattern}")
+    raise ValueError(f"Unknown Pattern - {pattern}")

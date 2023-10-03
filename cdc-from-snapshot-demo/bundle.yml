@@ -75,7 +75,10 @@ resources:
             notebook_path: ./src/notebooks/generate_snapshot.py
             base_parameters:
               snapshot_pattern: "Pattern 1"
-              snapshot_source_database: ${workspace.current_user.id}_snapshots 
+              snapshot_source_database: ${workspace.current_user.id}_snapshots
+          libraries:
+            - pypi:
+                package: Faker==19.6.2
         - task_key: cdc_from_snapshot
           depends_on: [{
                         "task_key": "generate_orders_snapshot"
@@ -103,6 +106,9 @@ resources:
             base_parameters:
               snapshot_pattern: "Pattern 2"
               snapshot_source_path: ${var.my_s3_bucket}/snapshot_ingestion_demo/orders/snapshots_${workspace.current_user.id}
+          libraries:
+            - pypi:
+                package: Faker==19.6.2
         - task_key: cdc_from_snapshot
           depends_on: [{
                         "task_key": "generate_orders_snapshot"
