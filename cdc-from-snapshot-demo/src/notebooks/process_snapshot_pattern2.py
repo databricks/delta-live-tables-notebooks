@@ -44,7 +44,7 @@ def next_snapshot_and_version(latest_snapshot_datetime):
         snapshot_path = snapshot_root_path + "/datetime={}".format(earliest_datetime_str)
         print(f"Reading earliest snapshot from {snapshot_path}")
         earliest_snapshot = spark.read.format("parquet").load(snapshot_path)
-        return earliest_snapshot,earliest_datetime_str
+        return earliest_snapshot, earliest_datetime_str
     else:
         latest_datetime = datetime.strptime(latest_datetime_str, '"%Y-%m-%d %H"')
         # Calculate the next datetime
