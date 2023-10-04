@@ -1,14 +1,14 @@
 bundle:
   name: dlt-apply-changes-from-snapshot-demo
+  version: 0.0.1
+  description: DLT Apply Changes from Snapshot Demo
+
 variables:
   my_instance_profile_arn:
     description: The IAM role to access S3 bucket.
-
   my_s3_bucket:
-    description: The S3 bucket to store the snapshots.  
-  
-workspace:
-  host: https://e2-demo-field-eng.cloud.databricks.com
+    description: The S3 bucket to store the snapshots.
+
 resources:
   pipelines:
     dlt_snapshot_ingestion_pattern1:
@@ -122,5 +122,5 @@ resources:
 targets:
   development:
     workspace:
-      host: https://e2-demo-field-eng.cloud.databricks.com
+      default: true
 
