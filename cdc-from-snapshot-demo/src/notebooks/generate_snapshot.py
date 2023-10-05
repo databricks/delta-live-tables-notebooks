@@ -1,10 +1,13 @@
 # Databricks notebook source
+# DBTITLE 1, Import modules and functions
+from faker import Faker
+from datetime import datetime, timedelta
+from random import randint, choice, uniform
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
 
 # COMMAND ----------
-
-"""
-Set up configuration 
-"""
+# DBTITLE 1,Notebook Parameters
 dbutils.widgets.removeAll()
 
 snapshot_pattern_options = ["Pattern 1", "Pattern 2"]
@@ -21,16 +24,7 @@ print(f"Database Name: {database_name}")
 print(f"Table Name: {table_name}")
 
 # COMMAND ----------
-
-from faker import Faker
-from datetime import datetime, timedelta
-from random import randint, choice, uniform
-from pyspark.sql.types import *
-from pyspark.sql.functions import *
-
-
-# COMMAND ----------
-
+# DBTITLE 1, Generate Random Orders
 
 def generate_order_data(num_orders, start_order_id):
     # Initialize Faker and seed it for reproducibility
@@ -72,15 +66,10 @@ def generate_order_data(num_orders, start_order_id):
         orders.append(order)
     return orders
 
-
-# COMMAND ----------
-
 def create_new_orders(num_orders, current_max_order_id):
     return generate_order_data(num_orders, current_max_order_id + 1)
 
-
 # COMMAND ----------
-
 # DBTITLE 1,Randomly Update Records from Existing Orders
 def update_existing_orders(existing_orders, percentage=0.3):
     # Filter the DataFrame to get the oldest pending orders
