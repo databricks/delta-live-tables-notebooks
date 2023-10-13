@@ -7,9 +7,11 @@ variables:
 # required for pattern 2
   my_instance_profile_arn:
     description: The IAM role to access S3 bucket.
+    default: ""
   # required for pattern 2
   my_s3_bucket:
     description: The S3 bucket to store the snapshots.
+    default: "dbfs:/demo"
   num_orders:
     description: The number of orders to generate.
     default: "10"
@@ -29,6 +31,9 @@ resources:
         - notebook:
             path: ./src/notebooks/order_count_by_status_pattern1.sql   
       edition: "ADVANCED"
+      permissions:
+            - level: CAN_VIEW
+              group_name: users
       clusters:
         - label: "default"
           autoscale:
@@ -52,6 +57,9 @@ resources:
         - notebook:
             path: ./src/notebooks/order_count_by_status_pattern2.sql   
       edition: "ADVANCED"
+      permissions:
+            - level: CAN_VIEW
+              group_name: users
       clusters:
         - label: "default"
           aws_attributes: 
@@ -67,6 +75,9 @@ resources:
   jobs:
     dlt_snapshot_ingestion_pattern1_job:
       name: "DLT Snapshot Ingestion - Pattern1 [${workspace.current_user.id}]"
+      permissions:
+        - level: CAN_VIEW
+          group_name: users
       job_clusters: 
         - job_cluster_key: job_cluster
           new_cluster:
@@ -96,6 +107,9 @@ resources:
 
     dlt_snapshot_ingestion_pattern2_job:
       name: "DLT Snapshot Ingestion - Pattern2 [${workspace.current_user.id}]"
+      permissions:
+        - level: CAN_VIEW
+          group_name: users
       job_clusters: 
         - job_cluster_key: job_cluster
           new_cluster:
