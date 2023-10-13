@@ -12,16 +12,25 @@ dbutils.widgets.removeAll()
 
 snapshot_pattern_options = ["Pattern 1", "Pattern 2"]
 dbutils.widgets.dropdown(name="snapshot_pattern", defaultValue="Pattern 1", choices=snapshot_pattern_options)
-dbutils.widgets.text(name="snapshot_source_path", defaultValue="")  # required for pattern 2
-dbutils.widgets.text(name="snapshot_source_database", defaultValue="")  # required for pattern 1
-# Get the parameter value
+dbutils.widgets.text(name="num_orders", defaultValue="10") # number of orders to generate
 snapshot_pattern = dbutils.widgets.get("snapshot_pattern")
-snapshot_source_path = dbutils.widgets.get("snapshot_source_path")
-database_name = dbutils.widgets.get("snapshot_source_database")
-table_name = f"{database_name}.orders_snapshot"
-print(f"Snapshot Pattern: {snapshot_pattern}")
-print(f"Database Name: {database_name}")
-print(f"Table Name: {table_name}")
+num_orders = int(dbutils.widgets.get("num_orders"))
+if snapshot_pattern == 'Pattern 1':
+    dbutils.widgets.text(name="snapshot_source_database", defaultValue="")  # required for pattern 1
+    database_name = dbutils.widgets.get("snapshot_source_database")
+    table_name = f"{database_name}.orders_snapshot"
+
+    print(f"""Number of Orders: {num_orders}
+Snapshot Pattern: {snapshot_pattern}
+Snapshot Database Name: {database_name}
+Snapshot Table Name: {table_name}""")
+    
+if snapshot_pattern == 'Pattern 2':
+    dbutils.widgets.text(name="snapshot_source_path", defaultValue="")  # required for pattern 2
+    snapshot_source_path = dbutils.widgets.get("snapshot_source_path")
+    print(f"""Number of Orders: {num_orders}
+Snapshot Pattern: {snapshot_pattern}
+Snapshot root path: {snapshot_source_path}""")
 
 # COMMAND ----------
 # DBTITLE 1, Generate Random Orders
@@ -133,8 +142,9 @@ order_schema = StructType([
 
 
 def get_initial_order_snapshot():
-    initial_orders = generate_order_data(100, 1)
+    initial_orders = generate_order_data(num_orders, 1)
     initial_orders_snapshot = spark.createDataFrame(initial_orders, schema=order_schema)
+    print(f"Initial snpashot data:  {display(initial_orders_snapshot)}")
     return initial_orders_snapshot
 
 
@@ -160,8 +170,8 @@ def get_incremental_order_snapshot(pattern):
     order_updates_df = order_updates_df.select(*common_columns)
 
     order_deletes_df = order_deletes_df.select(*common_columns)
-
-    new_orders = create_new_orders(10, current_max_order_id)
+    num_new_orders = int(num_orders * 0.2)
+    new_orders = create_new_orders(num_new_orders, current_max_order_id)
     new_orders_df = spark.createDataFrame(new_orders, schema=order_schema).select(*common_columns)
     print(f"number of new orders: {len(new_orders)}")
 
@@ -175,6 +185,17 @@ def get_incremental_order_snapshot(pattern):
         .union(order_updates_df)
         .union(new_orders_df)
     )
+    # for debugging
+    print(f"updated_orders:\n")
+    order_updates_df.show(20, False)
+    print("deleted_orders:\n")
+    order_deletes_df.show(20, False)
+    print(f"new_orders:\n")
+    new_orders_df.show(20, False)
+    print(f"existing_orders with updates and deletes:\n")
+    existing_orders_with_updates_and_deletes.show(20, False)
+    print(f"new_snapshot:\n")
+    new_snapshot.show(20, False)
     return new_snapshot
 
 
@@ -187,7 +208,9 @@ if snapshot_pattern == 'Pattern 1':
 The order snapshot data will be written to the delta table {table_name}.
 Every new snapshot data will overwrite the existing delta table.""")
     table_exists = spark.catalog.tableExists(table_name)
-    if table_exists:
+    # check if table is empty
+    table_empty = spark.table(table_name).count() == 0 if table_exists else True   
+    if table_exists and not table_empty:
         print(
             f"Previous snapshot found in table {table_name}. New snapshots are created with updates and inserts, and deletes")
         new_snapshot = get_incremental_order_snapshot(snapshot_pattern)
@@ -204,7 +227,7 @@ Every new snapshot data will overwrite the existing delta table.""")
             .saveAsTable(table_name)
         )
     else:
-        print(f"{table_name} doesn't exist. Creating orders table with initial snapshots data.")
+        print(f"{table_name} doesn't exist or table is empty. Generating initial snapshots data.")
         spark.sql(f"CREATE DATABASE IF NOT EXISTS `{database_name}`")
         initial_snapshot = get_initial_order_snapshot()
         dedup_initial_snapshot = initial_snapshot.dropDuplicates(

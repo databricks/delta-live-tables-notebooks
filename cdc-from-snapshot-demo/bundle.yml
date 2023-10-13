@@ -4,10 +4,15 @@ bundle:
   description: DLT Apply Changes from Snapshot Demo
 
 variables:
+# required for pattern 2
   my_instance_profile_arn:
     description: The IAM role to access S3 bucket.
+  # required for pattern 2
   my_s3_bucket:
     description: The S3 bucket to store the snapshots.
+  num_orders:
+    description: The number of orders to generate.
+    default: "10"
 
 resources:
   pipelines:
@@ -76,6 +81,7 @@ resources:
             base_parameters:
               snapshot_pattern: "Pattern 1"
               snapshot_source_database: ${workspace.current_user.id}_snapshots
+              num_orders: ${var.num_orders}
           libraries:
             - pypi:
                 package: Faker==19.6.2
@@ -106,6 +112,7 @@ resources:
             base_parameters:
               snapshot_pattern: "Pattern 2"
               snapshot_source_path: ${var.my_s3_bucket}/snapshot_ingestion_demo/orders/snapshots_${workspace.current_user.id}
+              num_orders: ${var.num_orders}
           libraries:
             - pypi:
                 package: Faker==19.6.2
