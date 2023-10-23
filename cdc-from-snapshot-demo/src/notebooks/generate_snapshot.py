@@ -13,8 +13,12 @@ dbutils.widgets.removeAll()
 snapshot_pattern_options = ["Pattern 1", "Pattern 2"]
 dbutils.widgets.dropdown(name="snapshot_pattern", defaultValue="Pattern 1", choices=snapshot_pattern_options)
 dbutils.widgets.text(name="num_orders", defaultValue="10") # number of orders to generate
+dbutils.widgets.text(name="num_customers", defaultValue="4") # number of customers to generate
+dbutils.widgets.text(name="num_products", defaultValue="5") # number of product ids to generate
 snapshot_pattern = dbutils.widgets.get("snapshot_pattern")
 num_orders = int(dbutils.widgets.get("num_orders"))
+num_customers = int(dbutils.widgets.get("num_customers"))
+num_products = int(dbutils.widgets.get("num_products"))
 if snapshot_pattern == 'Pattern 1':
     dbutils.widgets.text(name="snapshot_source_database", defaultValue="")  # required for pattern 1
     database_name = dbutils.widgets.get("snapshot_source_database")
@@ -35,7 +39,7 @@ Snapshot root path: {snapshot_source_path}""")
 # COMMAND ----------
 # DBTITLE 1, Generate Random Orders
 
-def generate_order_data(num_orders, start_order_id):
+def generate_order_data(num_orders, start_order_id, num_customers, num_products):
     # Initialize Faker and seed it for reproducibility
     fake = Faker()
     Faker.seed(42)
@@ -45,6 +49,11 @@ def generate_order_data(num_orders, start_order_id):
     start_date = end_date - timedelta(days=30)
     orders = []
 
+    # Generate a list of unique customer IDs and product IDs
+    unique_customer_ids = [str(i) for i in range(1, num_customers + 1)]
+    unique_product_ids = [i for i in range(1, num_products + 1)]
+
+
     for order_id in range(start_order_id, num_orders + start_order_id):
         # Generate random timedelta for the current order_id
         days_offset = uniform(0, num_orders)  # Uniform random float between 0 and num_orders
@@ -53,9 +62,11 @@ def generate_order_data(num_orders, start_order_id):
 
         order_date = start_date + random_timedelta
         order_date_str = order_date.strftime("%Y-%m-%d %H:%M:%S")
-        customer_id = str(randint(10001, 20000))
+        # customer_id = str(randint(10001, 20000))
+        customer_id = choice(unique_customer_ids)
         price = fake.random_int(min=10, max=1000)
-        product_id = randint(2000, 2100)
+        # product_id = randint(2000, 2100)
+        product_id = choice(unique_product_ids)
         # Randomly decide whether the order status will be "re-ordered"/"pending"
         # or any other status with 70% probability
         if uniform(0, 1) <= 0.3:
@@ -75,8 +86,8 @@ def generate_order_data(num_orders, start_order_id):
         orders.append(order)
     return orders
 
-def create_new_orders(num_orders, current_max_order_id):
-    return generate_order_data(num_orders, current_max_order_id + 1)
+def create_new_orders(num_orders, current_max_order_id, num_customers, num_products):
+    return generate_order_data(num_orders, current_max_order_id + 1, num_customers, num_products)
 
 # COMMAND ----------
 # DBTITLE 1,Randomly Update Records from Existing Orders
@@ -140,9 +151,8 @@ order_schema = StructType([
     StructField("product_id", IntegerType(), True)
 ])
 
-
 def get_initial_order_snapshot():
-    initial_orders = generate_order_data(num_orders, 1)
+    initial_orders = generate_order_data(num_orders, 1, num_customers, num_products)
     initial_orders_snapshot = spark.createDataFrame(initial_orders, schema=order_schema)
     print(f"Initial snpashot data:  {display(initial_orders_snapshot)}")
     return initial_orders_snapshot
@@ -171,7 +181,7 @@ def get_incremental_order_snapshot(pattern):
 
     order_deletes_df = order_deletes_df.select(*common_columns)
     num_new_orders = int(num_orders * 0.2)
-    new_orders = create_new_orders(num_new_orders, current_max_order_id)
+    new_orders = create_new_orders(num_new_orders, current_max_order_id, num_customers, num_products)
     new_orders_df = spark.createDataFrame(new_orders, schema=order_schema).select(*common_columns)
     print(f"number of new orders: {len(new_orders)}")
 
@@ -194,14 +204,16 @@ def get_incremental_order_snapshot(pattern):
     new_orders_df.show(20, False)
     print(f"existing_orders with updates and deletes:\n")
     existing_orders_with_updates_and_deletes.show(20, False)
+    from pyspark.sql.functions import count
+    grouped_data = existing_orders_with_updates_and_deletes.groupby('order_id')
+    check_orders = grouped_data.agg(count("customer_id").alias("total_customer_ids"), count("product_id").alias("count_product_ids")) 
+    print(f"check_orders:\n")
+    check_orders.show(20, False)
     print(f"new_snapshot:\n")
     new_snapshot.show(20, False)
     return new_snapshot
 
-
 # COMMAND ----------
-
-
 # write snapshots
 if snapshot_pattern == 'Pattern 1':
     print(f"""Generating Order Snapshot Data for Pattern {snapshot_pattern}. 
@@ -226,6 +238,8 @@ Every new snapshot data will overwrite the existing delta table.""")
             .mode("overwrite")
             .saveAsTable(table_name)
         )
+        print(f"dedup_new_snapshot:\n")
+        dedup_new_snapshot.show(20, False)
     else:
         print(f"{table_name} doesn't exist or table is empty. Generating initial snapshots data.")
         spark.sql(f"CREATE DATABASE IF NOT EXISTS `{database_name}`")
@@ -239,7 +253,8 @@ Every new snapshot data will overwrite the existing delta table.""")
             .mode("overwrite")
             .saveAsTable(table_name)
         )
-
+        print(f"dedup_initial_snapshot:\n")
+        dedup_initial_snapshot.show(20, False)
 elif snapshot_pattern == 'Pattern 2':
     print(f"""Generating Order Snapshot Data for Pattern {snapshot_pattern}. 
 The order snapshot data will be written to the given snapshot path: {snapshot_source_path}.
@@ -270,6 +285,8 @@ The new path is constructed as: /<base_path>/datetime=yyyy-mm-dd hh""")
             .mode("overwrite")
             .save(snapshot_path)
         )
+        print(f"dedup_new_snapshot:\n")
+        dedup_new_snapshot.show(20, False)
     else:
         print(f"Initial orders snapshot are created and written to path {snapshot_path} in Parquet format")
         initial_snapshot = get_initial_order_snapshot()
@@ -282,5 +299,7 @@ The new path is constructed as: /<base_path>/datetime=yyyy-mm-dd hh""")
             .mode("overwrite")
             .save(snapshot_path)
         )
+        print(f"dedup_initial_snapshot:\n")
+        dedup_initial_snapshot.show(20, False)
 else:
     raise ValueError(f"Unknown Pattern - {pattern}")
