@@ -201,7 +201,11 @@ def get_incremental_order_snapshot(pattern):
     if pattern == 'Pattern 1':
         existing_orders = spark.table(table_name)
     elif pattern == 'Pattern 2':
-        existing_orders = spark.read.format("parquet").load(path=snapshot_path)
+        all_snpapshots = dbutils.fs.ls(snapshot_path)
+        sorted_snapshots = sorted(all_snpapshots, key=lambda x: x.modificationTime, reverse=True)
+        most_recent_snapshot_path = sorted_snapshots[0].path
+        print(f"Loading most recent snapshot from path: {most_recent_snapshot_path}")
+        existing_orders = spark.read.format("parquet").load(path=most_recent_snapshot_path)
     else:
         raise ValueError(f"Unknown Pattern - {pattern}")
 
@@ -307,7 +311,7 @@ The new path is constructed as: {snapshot_path}/datetime=yyyy-mm-dd hh""")
     # construct a path for this snapshot
     current_datetime = datetime.now()
     datetime_str = current_datetime.strftime('"%Y-%m-%d %H"')
-    snapshot_path = snapshot_path + "/datetime=" + datetime_str
+    new_snapshot_path = snapshot_path + "/datetime=" + datetime_str
     if path_exists:
         print(
             f"Previous snapshots Found at path  {snapshot_path}. New snapshots are created with updates and inserts, and deletes")
@@ -320,7 +324,7 @@ The new path is constructed as: {snapshot_path}/datetime=yyyy-mm-dd hh""")
             .write
             .format("parquet")
             .mode("overwrite")
-            .save(snapshot_path)
+            .save(new_snapshot_path)
         )
         print(f"dedup_new_snapshot:\n")
         dedup_new_snapshot.show(20, False)
@@ -334,7 +338,7 @@ The new path is constructed as: {snapshot_path}/datetime=yyyy-mm-dd hh""")
             .write
             .format("parquet")
             .mode("overwrite")
-            .save(snapshot_path)
+            .save(new_snapshot_path)
         )
         print(f"dedup_initial_snapshot:\n")
         dedup_initial_snapshot.show(20, False)
