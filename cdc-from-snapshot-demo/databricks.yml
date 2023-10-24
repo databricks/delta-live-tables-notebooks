@@ -173,7 +173,7 @@ targets:
             snapshot_source_catalog: ${var.my_catalog}
         dlt_snapshot_ingestion_pattern2:
           name: "${var.dlt_pipeline_name_prefix} - Pattern2-UC [${workspace.current_user.id}]"
-          catalog: ${var.my_catalog}"
+          catalog: ${var.my_catalog}
           configuration:
              snapshot_path: "dbfs:/Volumes/${var.my_catalog}/snapshots_${workspace.current_user.id}/orders_snapshot"
       jobs:
