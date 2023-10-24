@@ -7,6 +7,9 @@ from pyspark.sql.types import *
 from pyspark.sql.functions import *
 
 # COMMAND ----------
+user_id = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().get("userId").get()
+
+# COMMAND ----------
 # DBTITLE 1,Notebook Parameters
 dbutils.widgets.removeAll()
 
@@ -15,26 +18,61 @@ dbutils.widgets.dropdown(name="snapshot_pattern", defaultValue="Pattern 1", choi
 dbutils.widgets.text(name="num_orders", defaultValue="10") # number of orders to generate
 dbutils.widgets.text(name="num_customers", defaultValue="4") # number of customers to generate
 dbutils.widgets.text(name="num_products", defaultValue="5") # number of product ids to generate
+dbutils.widgets.dropdown(name="is_UC", defaultValue="False", choices=["True", "False"])
+
+
+is_UC = True if dbutils.widgets.get("is_UC").lower() == "true" else False
 snapshot_pattern = dbutils.widgets.get("snapshot_pattern")
 num_orders = int(dbutils.widgets.get("num_orders"))
 num_customers = int(dbutils.widgets.get("num_customers"))
 num_products = int(dbutils.widgets.get("num_products"))
-if snapshot_pattern == 'Pattern 1':
-    dbutils.widgets.text(name="snapshot_source_database", defaultValue="")  # required for pattern 1
-    database_name = dbutils.widgets.get("snapshot_source_database")
-    table_name = f"{database_name}.orders_snapshot"
 
-    print(f"""Number of Orders: {num_orders}
-Snapshot Pattern: {snapshot_pattern}
-Snapshot Database Name: {database_name}
-Snapshot Table Name: {table_name}""")
-    
-if snapshot_pattern == 'Pattern 2':
-    dbutils.widgets.text(name="snapshot_source_path", defaultValue="")  # required for pattern 2
-    snapshot_source_path = dbutils.widgets.get("snapshot_source_path")
-    print(f"""Number of Orders: {num_orders}
-Snapshot Pattern: {snapshot_pattern}
-Snapshot root path: {snapshot_source_path}""")
+print(f"""Number of Orders: {num_orders}
+    Number of Customers: {num_customers}
+    Number of Products: {num_products}
+    Snapshot Pattern: {snapshot_pattern}
+    is_UC: {is_UC}
+    """)
+
+
+table_name = None # for pattern 1
+snapshot_path = None # for pattern 2
+
+if snapshot_pattern.lower() == 'pattern 1':
+    catalog = None
+    schema = None
+
+    if(is_UC):
+        dbutils.widgets.text(name="catalog", defaultValue="main")
+        dbutils.widgets.text(name="database", defaultValue=f"snapshots_{user_id}")
+        catalog = dbutils.widgets.get("catalog")
+        schema = dbutils.widgets.get("database")
+        spark.sql(f"create schema if not exists {catalog}.{schema}")
+    else:
+        catalog = "hive_metastore"
+        dbutils.widgets.text(name="database", defaultValue=f"snapshots_{user_id}")
+        schema = dbutils.widgets.get("database")
+        spark.sql(f"create schema if not exists {catalog}.{schema}")
+    table = "orders_snapshot"
+    table_name = f"{catalog}.{schema}.{table}"
+    print(f"Snapshot Table Name: {table_name}")
+
+if snapshot_pattern.lower() == 'pattern 2':
+    if(is_UC):
+        dbutils.widgets.text(name="catalog", defaultValue="main")
+        dbutils.widgets.text(name="database", defaultValue=f"snapshots_{user_id}")
+        catalog = dbutils.widgets.get("catalog")
+        schema = dbutils.widgets.get("database")
+        volume = "orders_snapshot"
+        volume_name = f"{catalog}.{schema}.{volume}"
+        spark.sql(f"create schema if not exists {catalog}.{schema}")
+        spark.sql(f"CREATE VOLUME IF NOT EXISTS {volume_name}")
+        snapshot_path = f"dbfs:/Volumes/{catalog}/{schema}/{volume}"
+    else:
+        dbutils.widgets.text(name="snapshot_path", defaultValue=f"dbfs:/snapshots_{user_id}/orders/")
+        snapshot_path = dbutils.widgets.get("snapshot_path")
+
+    print(f"Snapshot root path: {snapshot_path}")
 
 # COMMAND ----------
 # DBTITLE 1, Generate Random Orders
@@ -163,7 +201,7 @@ def get_incremental_order_snapshot(pattern):
     if pattern == 'Pattern 1':
         existing_orders = spark.table(table_name)
     elif pattern == 'Pattern 2':
-        existing_orders = spark.read.format("parquet").load(path=snapshot_source_path)
+        existing_orders = spark.read.format("parquet").load(path=snapshot_path)
     else:
         raise ValueError(f"Unknown Pattern - {pattern}")
 
@@ -242,7 +280,6 @@ Every new snapshot data will overwrite the existing delta table.""")
         dedup_new_snapshot.show(20, False)
     else:
         print(f"{table_name} doesn't exist or table is empty. Generating initial snapshots data.")
-        spark.sql(f"CREATE DATABASE IF NOT EXISTS `{database_name}`")
         initial_snapshot = get_initial_order_snapshot()
         dedup_initial_snapshot = initial_snapshot.dropDuplicates(
             subset=["order_id", "price", "order_status", "customer_id", "product_id"])
@@ -257,23 +294,23 @@ Every new snapshot data will overwrite the existing delta table.""")
         dedup_initial_snapshot.show(20, False)
 elif snapshot_pattern == 'Pattern 2':
     print(f"""Generating Order Snapshot Data for Pattern {snapshot_pattern}. 
-The order snapshot data will be written to the given snapshot path: {snapshot_source_path}.
+The order snapshot data will be written to the given snapshot path: {snapshot_path}.
 Every new snapshot data will be written to a new path in parquet formats. 
-The new path is constructed as: /<base_path>/datetime=yyyy-mm-dd hh""")
+The new path is constructed as: {snapshot_path}/datetime=yyyy-mm-dd hh""")
 
     path_exists = False
     try:
-        path_exists = len(dbutils.fs.ls(snapshot_source_path)) >= 1 if len(snapshot_source_path) > 0 else False
+        path_exists = len(dbutils.fs.ls(snapshot_path)) >= 1 if len(snapshot_path) > 0 else False
     except:
         path_exists = False
 
     # construct a path for this snapshot
     current_datetime = datetime.now()
     datetime_str = current_datetime.strftime('"%Y-%m-%d %H"')
-    snapshot_path = snapshot_source_path + "/datetime=" + datetime_str
+    snapshot_path = snapshot_path + "/datetime=" + datetime_str
     if path_exists:
         print(
-            f"Previous snapshots Found at path  {snapshot_source_path}. New snapshots are created with updates and inserts, and deletes")
+            f"Previous snapshots Found at path  {snapshot_path}. New snapshots are created with updates and inserts, and deletes")
         new_snapshot = get_incremental_order_snapshot(snapshot_pattern)
         dedup_new_snapshot = new_snapshot.dropDuplicates(
             subset=["order_id", "price", "order_status", "customer_id", "product_id"])

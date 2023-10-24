@@ -1,4 +1,5 @@
 # DLT APPLY CHANGES FROM SNAPSHOT
+
 When you run `databricks bundle deploy`, it will deploy two jobs:
 * DLT Snapshot Ingestion - Pattern1 [<USER_ID>]
 * DLT Snapshot Ingestion - Pattern2 [<USER_ID>]
@@ -13,20 +14,21 @@ First, you'll need to setup the environment variables:
 # Mandatory: First, set databricks host and token
 export DATABRICKS_HOST=<MYWORKSPACE>.cloud.databricks.com
 export DATABRICKS_TOKEN=<MY_DATABRICKS_TOKEN>
-
-# Optional: Next, for pattern 2, if you want to write snapshots to an S3 bucket, then, you'll need to set the following additional environment variables. By default, it will write to a DBFS path in which case, you don't need to set these environment variables.
-
-# set environment variables for IAM role and S3 bucket. If you don't set environment variables, 
-# you'll need to pass the variable name and value as part of the bundle deploy command.
-# e.g. databricks bundle validate --var="my_instance_profile_arn=<MY_IAM_ROLE>"
-export BUNDLE_VAR_my_iam_role=<MY_IAM_ROLE> && export BUNDLE_VAR_my_s3_bucket=<MY_S3_BUCKET>
-
 ```
-Next, run the following commands from the root of the repo:
+Next, to run the demo with Hive Metastore, run the following commands from the root of the repo:
 ```bash
 cd cdc-from-snapshot
-databricks bundle validate
-databricks bundle deploy
+databricks bundle validate --target development
+databricks bundle deploy --target development
+databricks bundle run dlt_snapshot_ingestion_pattern1_job
+databricks bundle run dlt_snapshot_ingestion_pattern2_job
+```
+
+Next, to run the demo with Unity Catalog, run the following commands from the root of the repo:
+```bash
+cd cdc-from-snapshot
+databricks bundle validate --target development-uc
+databricks bundle deploy --target development-uc
 databricks bundle run dlt_snapshot_ingestion_pattern1_job
 databricks bundle run dlt_snapshot_ingestion_pattern2_job
 ```

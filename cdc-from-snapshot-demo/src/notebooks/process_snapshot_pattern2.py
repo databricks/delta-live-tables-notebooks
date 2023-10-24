@@ -15,7 +15,7 @@ def exist(path):
         return False
 
 
-snapshot_root_path = spark.conf.get("snapshot_root_path")
+snapshot_root_path = spark.conf.get("snapshot_path")
 
 # List all objects in the bucket using dbutils.fs
 object_paths = dbutils.fs.ls(snapshot_root_path)
@@ -65,7 +65,7 @@ def next_snapshot_and_version(latest_snapshot_datetime):
             return None
 
 
-dlt.create_streaming_table(name="orders_pattern2",
+dlt.create_streaming_table(name="orders",
                            comment="Clean, merged final table from the full snapshots",
                            table_properties={
                                "quality": "gold"
@@ -73,7 +73,7 @@ dlt.create_streaming_table(name="orders_pattern2",
                            )
 
 dlt.apply_changes_from_snapshot(
-    target="orders_pattern2",
+    target="orders",
     snapshot_and_version=next_snapshot_and_version,
     keys=["order_id"],
     stored_as_scd_type=2,

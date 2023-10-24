@@ -3,10 +3,10 @@ import dlt
 from datetime import datetime
 import datetime
 
+catalog_name = spark.conf.get("snapshot_source_catalog")
 database_name = spark.conf.get("snapshot_source_database")
 table = "orders_snapshot"
-table_name = f"{database_name}.{table}"
-snapshot_source_table_name = f"{database_name}.orders_snapshot"
+snapshot_source_table_name = f"{catalog_name}.{database_name}.orders_snapshot"
 
 
 def get_current_timestamp_millis():
