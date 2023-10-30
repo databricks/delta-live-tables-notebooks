@@ -19,13 +19,20 @@ First, you'll need to setup the environment variables:
 export DATABRICKS_HOST=<MYWORKSPACE>.cloud.databricks.com
 export DATABRICKS_TOKEN=<MY_DATABRICKS_TOKEN>
 ```
-Next, to run the demo with **Hive Metastore**, run the following commands from the root of the repo:
+Next, you'll use Databricks CLI to deploy and run the workflow. If you haven't already installed Databricks CLI, 
+please follow the instructions from [here](https://docs.databricks.com/en/dev-tools/cli/install.html)
+
+*Note*: The minimum version of Databricks CLI required is `Databricks CLI v0.208.2`. You can run `databricks -v` 
+to check the CLI version.
+
+```bash
+to run the demo with **Hive Metastore**, run the following commands from the root of the repo:
 ```bash
 cd cdc-from-snapshot
 databricks bundle validate --target development
 databricks bundle deploy --target development
-databricks bundle run dlt_snapshot_ingestion_pattern1_job
-databricks bundle run dlt_snapshot_ingestion_pattern2_job
+databricks bundle run dlt_snapshot_ingestion_pattern1_job --target development
+databricks bundle run dlt_snapshot_ingestion_pattern2_job --target development
 ```
 
 Next, to run the demo with **Unity Catalog**, run the following commands from the root of the repo:
@@ -33,6 +40,6 @@ Next, to run the demo with **Unity Catalog**, run the following commands from th
 cd cdc-from-snapshot
 databricks bundle validate --target development-uc
 databricks bundle deploy --target development-uc
-databricks bundle run dlt_snapshot_ingestion_pattern1_job
-databricks bundle run dlt_snapshot_ingestion_pattern2_job
+databricks bundle run dlt_snapshot_ingestion_pattern1_job --target development-uc
+databricks bundle run dlt_snapshot_ingestion_pattern2_job --target development-uc
 ```
