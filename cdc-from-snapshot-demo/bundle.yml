@@ -1,11 +1,19 @@
 bundle:
   name: dlt-apply-changes-from-snapshot-demo
+<<<<<<< HEAD
 workspace:
   host: https://e2-demo-field-eng.cloud.databricks.com
 resources:
   pipelines:
     single_snapshot_dlt_pipeline:
       name: "${workspace.current_user.id}] DLT Apply Changes from Single Snapshot"
+=======
+
+resources:
+  pipelines:
+    single_snapshot_dlt_pipeline:
+      name: "[${bundle.environment}-${workspace.current_user.id}] DLT Apply Changes from Single Snapshot"
+>>>>>>> upstream/main
       target: "single_snapshot_${workspace.current_user.id}"
       development: true
       continuous: false
@@ -13,6 +21,7 @@ resources:
       photon: false
       libraries:
         - notebook:
+<<<<<<< HEAD
             path: ./single_multi_snapshots/notebooks/process_snapshot_pattern1.py
         - notebook:
             path: ./single_multi_snapshots/notebooks/order_count_by_status_pattern1.sql   
@@ -24,6 +33,15 @@ resources:
             max_workers": 5,
             mode": "ENHANCED"
             # num_workers: 1
+=======
+            path: ./single_snapshots/notebooks/process_snapshot.py
+        - notebook:
+            path: ./single_snapshots/notebooks/order_count_by_status.sql   
+      edition: "ADVANCED"
+      clusters:
+        - label: "default"
+          num_workers: 1
+>>>>>>> upstream/main
       configuration:
         snapshot_source_database: ${workspace.current_user.id}_snapshots   
 
@@ -42,8 +60,11 @@ resources:
       edition: "ADVANCED"
       clusters:
         - label: "default"
+<<<<<<< HEAD
           aws_attributes: 
             instance_profile_arn: "arn:aws:iam::997819012307:instance-profile/one-env-databricks-access"
+=======
+>>>>>>> upstream/main
           autoscale:
             min_workers": 1,
             max_workers": 5,
@@ -54,6 +75,7 @@ resources:
 
   jobs:
     single_snapshot_job:
+<<<<<<< HEAD
       name: "${workspace.current_user.id}] Single Snapshot Demo"
       tasks:
         - task_key: generate_orders_snapshot
@@ -62,6 +84,16 @@ resources:
             notebook_path: ./single_multi_snapshots/notebooks/generate_snapshot.py
             base_parameters:
               snapshot_source_database: ${workspace.current_user.id}_snapshots 
+=======
+      name: "[${bundle.environment}-${workspace.current_user.id}] Single Snapshot Demo"
+      tasks:
+        - task_key: generate_orders_snapshot
+          existing_cluster_id: 0720-173335-dramomli
+          notebook_task:
+            notebook_path: ./single_snapshots/notebooks/generate_snapshot.py
+            base_parameters:
+              snapshot_source_database: "${workspace.current_user.id}_snapshots"
+>>>>>>> upstream/main
         - task_key: cdc_from_snapshot
           depends_on: [{
                         "task_key": "generate_orders_snapshot"
@@ -71,6 +103,7 @@ resources:
             pipeline_id: ${resources.pipelines.single_snapshot_dlt_pipeline.id}
             full_refresh: false
 
+<<<<<<< HEAD
     multi_snapshots_job:
       name: "${workspace.current_user.id}] multiple Snapshots Demo"
       tasks:
@@ -95,3 +128,19 @@ targets:
     workspace:
       host: https://e2-demo-field-eng.cloud.databricks.com
 
+=======
+
+
+environments:
+  dev:
+    workspace: 
+      host: https://e2-demo-field-eng.cloud.databricks.com
+    default: true
+    resources:
+      pipelines:
+        single_snapshot_dlt_pipeline: 
+          development: true
+          permissions:
+            - level: CAN_VIEW
+              group_name: users 
+>>>>>>> upstream/main
