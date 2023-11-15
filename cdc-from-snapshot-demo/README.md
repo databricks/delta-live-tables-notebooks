@@ -25,6 +25,11 @@ please follow the instructions from [here](https://docs.databricks.com/en/dev-to
 *Note*: The minimum version of Databricks CLI required is `Databricks CLI v0.208.2`. You can run `databricks -v` 
 to check the CLI version.
 
+Note: `databricks bundle run` command runs the job and waits for it to finish. If you want to run all of them, you'll need to run each `databricks bundle run` command in the new terminal.
+
+You can always go to the Databricks `Workflows` page and click `Jobs`and find the job . You can either trigger the run manually or scheduled them to run hourly.
+
+
 ```bash
 to run the demo with **Hive Metastore**, run the following commands from the root of the repo:
 ```bash
@@ -43,3 +48,7 @@ databricks bundle deploy --target development-uc
 databricks bundle run dlt_snapshot_ingestion_pattern1_job --target development-uc
 databricks bundle run dlt_snapshot_ingestion_pattern2_job --target development-uc
 ```
+
+To view the Job runs, you can go to your Databricks workspace and go to `Workflow` and `Job runs`. You can further filter the job runs by clicking on `Only my job runs` and you should see the job your runs as shown below.
+
+![Job Runs](dlt_snapshot_processing_job_runs.png)
