@@ -1,11 +1,8 @@
-"""DLT-META DAIS DEMO script."""
-import os
+"""Techsummit demo runner script."""
 import time
 import uuid
 import argparse
 import base64
-import json
-from databricks_cli.dbfs.api import DbfsApi
 from databricks_cli.configure.config import _get_api_client
 from databricks_cli.configure.provider import EnvironmentVariableConfigProvider
 from databricks_cli.sdk import JobsService, DbfsService, DeltaPipelinesService, WorkspaceService
@@ -24,10 +21,37 @@ cloud_node_type_id_dict = {"aws": "i3.xlarge", "azure": "Standard_D3_v2", "gcp":
 def create_workflow_spec(job_spec_dict):
     """Create Job specification."""
     job_spec = {
-        "run_name": f"dais-dlt-meta-demo-{job_spec_dict['run_id']}",
+        "run_name": f"techsummit-dlt-meta-demo-{job_spec_dict['run_id']}",
         "tasks": [
+
             {
-                "task_key": "setup_dlt_meta_pipeline_spec",
+                "task_key": "generate_data",
+                "description": "Generate Test Data and Onboarding Files",
+                "new_cluster": {
+                    "spark_version": job_spec_dict['dbr_version'],
+                    "num_workers": job_spec_dict['worker_nodes'],
+                    "node_type_id": job_spec_dict['node_type_id'],
+                    "data_security_mode": "LEGACY_SINGLE_USER",
+                    "runtime_engine": "STANDARD"
+                },
+                "notebook_task": {
+                    "notebook_path": f"{job_spec_dict['runners_nb_path']}/runners/data_generator",
+                    "base_parameters": {
+                        "base_input_path": job_spec_dict['dbfs_tmp_path'],
+                        "table_column_count": job_spec_dict['table_column_count'],
+                        "table_count":job_spec_dict['table_count'],
+                        "table_data_rows_count":job_spec_dict['table_data_rows_count']
+                    }
+                }
+
+            },
+            {
+                "task_key": "onboarding_job",
+                "depends_on": [
+                    {
+                        "task_key": "generate_data"
+                    }
+                ],
                 "description": "Sets up metadata tables for DLT-META",
                 "new_cluster": {
                     "spark_version": job_spec_dict['dbr_version'],
@@ -69,10 +93,10 @@ def create_workflow_spec(job_spec_dict):
                 ]
             },
             {
-                "task_key": "bronze_initial_run",
+                "task_key": "bronze_dlt",
                 "depends_on": [
                     {
-                        "task_key": "setup_dlt_meta_pipeline_spec"
+                        "task_key": "onboarding_job"
                     }
                 ],
                 "pipeline_task": {
@@ -80,68 +104,16 @@ def create_workflow_spec(job_spec_dict):
                 }
             },
             {
-                "task_key": "silver_initial_run",
+                "task_key": "silver_dlt",
                 "depends_on": [
                     {
-                        "task_key": "bronze_initial_run"
+                        "task_key": "bronze_dlt"
                     }
                 ],
                 "pipeline_task": {
                     "pipeline_id": job_spec_dict['silver_pipeline_id']
                 }
-            },
-            {
-                "task_key": "load_incremental_data",
-                "description": "Load Incremental Data",
-                "depends_on": [
-                    {
-                        "task_key": "silver_initial_run"
-                    }
-                ],
-                "new_cluster": {
-                    "spark_version": job_spec_dict['dbr_version'],
-                    "num_workers": 0,
-                    "node_type_id": job_spec_dict['node_type_id'],
-                    "data_security_mode": "LEGACY_SINGLE_USER",
-                    "runtime_engine": "STANDARD",
-                    "spark_conf": {
-                        "spark.master": "local[*, 4]",
-                        "spark.databricks.cluster.profile": "singleNode",
-                    },
-                    "custom_tags": {
-                        "ResourceClass": "SingleNode",
-                    }
-                },
-                "notebook_task": {
-                    "notebook_path": f"{job_spec_dict['runners_nb_path']}/runners/load_incremental_data",
-                    "base_parameters": {
-                        "dbfs_tmp_path": job_spec_dict['dbfs_tmp_path']
-                    }
-                }
-
-            },
-            {
-                "task_key": "bronze_incremental_run",
-                "depends_on": [
-                    {
-                        "task_key": "load_incremental_data"
-                    }
-                ],
-                "pipeline_task": {
-                    "pipeline_id": job_spec_dict['bronze_pipeline_id']
-                }
-            },
-            {
-                "task_key": "silver_incremental_run",
-                "depends_on": [
-                    {
-                        "task_key": "bronze_incremental_run"
-                    }
-                ],
-                "pipeline_task": {
-                    "pipeline_id": job_spec_dict['silver_pipeline_id']
-                }
-            },
+            }
         ]
     }
     print(job_spec)
@@ -158,7 +130,7 @@ def create_dlt_meta_pipeline(
         clusters=[
             {
                 "label": "default",
-                "num_workers": 1
+                "num_workers": 4
             }
         ],
         configuration=configuration,
@@ -209,33 +181,11 @@ class JobSubmitRunner():
                     break
             else:
                 print(
-                    "Job was either Skipped or had Internal error please check the job ui and run in Databricks to see why")
+                    "Job was either Skipped or had Internal error please check the jobs ui")
                 print(self.run_state_message)
                 break
 
             time.sleep(20)
-
-
-def create_onboarding(dbfs_tmp_path, run_id):
-    
-    """Create onboarding file for cloudfiles as source."""
-    onboarding_template = "demo/conf/onboarding.template"
-    with open(f"{onboarding_template}") as f:
-        onboard_obj = json.load(f)
-
-    for data_flow in onboard_obj:
-        for key, value in data_flow.items():
-            if key == "source_details":
-                for source_key, source_value in value.items():
-                    if 'dbfs_path' in source_value:
-                        data_flow[key][source_key] = source_value.format(dbfs_path=dbfs_tmp_path)
-            if 'dbfs_path' in value:
-                data_flow[key] = value.format(dbfs_path=dbfs_tmp_path)
-            elif 'run_id' in value:
-                data_flow[key] = value.format(run_id=run_id)
-
-    with open("demo/conf/onboarding.json", "w") as onboarding_file:
-        json.dump(onboard_obj, onboarding_file)
 
 
 def main():
@@ -247,9 +197,8 @@ def main():
     run_id = uuid.uuid4().hex
     dbfs_tmp_path = f"{args.__dict__['dbfs_path']}/{run_id}"
     database = f"dais_dlt_meta_{run_id}"
-    int_tests = "demo/"
-    runners_nb_path = f"/Users/{username}/dais_dlt_meta/{run_id}"
-    runners_full_local_path = 'demo/dais_dlt_meta_runners.dbc'
+    runners_nb_path = f"/Users/{username}/techsummit_dlt_meta/{run_id}"
+    runners_full_local_path = 'demo/tech_summit_dlt_meta_runners.dbc'
 
     dbfs_service = DbfsService(api_client)
     jobs_service = JobsService(api_client)
@@ -257,9 +206,6 @@ def main():
     pipeline_service = DeltaPipelinesService(api_client)
 
     try:
-        create_onboarding(dbfs_tmp_path, run_id)
-
-        DbfsApi(api_client).cp(True, True, int_tests, dbfs_tmp_path + "/")
         fp = open(runners_full_local_path, "rb")
         workspace_service.mkdirs(path=runners_nb_path)
         workspace_service.import_workspace(path=f"{runners_nb_path}/runners", format="DBC",
@@ -285,7 +231,7 @@ def main():
                          "node_type_id": cloud_node_type_id_dict[args.__dict__['cloud_provider_name']],
                          "dbr_version": args.__dict__['dbr_version']
                          }
-
+        job_spec_dict = get_datagenerator_details(args, job_spec_dict)
         silver_pipeline_id = create_dlt_meta_pipeline(
             pipeline_service, runners_nb_path, run_id, configuration={
                 "layer": "silver",
@@ -294,16 +240,11 @@ def main():
             }
         )
         job_spec_dict["silver_pipeline_id"] = silver_pipeline_id
-
         job_spec = create_workflow_spec(job_spec_dict)
-        
         job_submit_runner = JobSubmitRunner(jobs_service, job_spec)
-
         job_run_info = job_submit_runner.submit()
         print(f"Run URL {job_run_info['run_id']}")
-
         job_submit_runner.monitor(job_run_info['run_id'])
-
     except Exception as e:
         print(e)
     finally:
@@ -311,10 +252,26 @@ def main():
         pipeline_service.delete(silver_pipeline_id)
         dbfs_service.delete(dbfs_tmp_path, True)
         workspace_service.delete(runners_nb_path, True)
-        try:
-            os.remove("conf/onboarding.json")
-        except Exception as e:
-            print(e)
+
+
+def get_datagenerator_details(args, job_spec_dict):
+    if args.__dict__['table_count']:
+        job_spec_dict['table_count'] = args.__dict__['table_count']
+    else:
+        job_spec_dict['table_count'] = "100"
+    if args.__dict__['table_column_count']:
+        job_spec_dict['table_column_count'] = args.__dict__['table_column_count']
+    else:
+        job_spec_dict['table_column_count'] = "5"
+    if args.__dict__['table_data_rows_count']:
+        job_spec_dict['table_data_rows_count'] = args.__dict__['table_data_rows_count']
+    else:
+        job_spec_dict['table_data_rows_count'] = "10"
+    if args.__dict__['worker_nodes']:
+        job_spec_dict['worker_nodes'] = args.__dict__['worker_nodes']
+    else:
+        job_spec_dict['worker_nodes'] = "4"
+    return job_spec_dict
 
 
 def process_arguments():
@@ -323,9 +280,14 @@ def process_arguments():
     parser.add_argument("--cloud_provider_name",
                         help="provide cloud provider name. Supported values are aws , azure , gcp")
     parser.add_argument("--dbr_version", help="Provide databricks runtime spark version e.g 11.3.x-scala2.12")
+    parser.add_argument("--dlt_workers", help="Provide Worker node count e.g 4")
     parser.add_argument("--dbfs_path",
                         help="Provide databricks workspace dbfs path where you want run integration tests \
                         e.g --dbfs_path=dbfs:/tmp/DLT-META/")
+    parser.add_argument("--worker_nodes", help="Provide number of worker nodes for data generation e.g 4")
+    parser.add_argument("--table_count", help="Provide table count e.g 100")
+    parser.add_argument("--table_column_count", help="Provide column count e.g 5")
+    parser.add_argument("--table_data_rows_count", help="Provide data rows count e.g 10")
     args = parser.parse_args()
     mandatory_args = ["cloud_provider_name", "dbr_version", "dbfs_path"]
     check_mandatory_arg(args, mandatory_args)
