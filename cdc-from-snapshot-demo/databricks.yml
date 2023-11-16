@@ -1,0 +1,198 @@
+bundle:
+  name: dlt-apply-changes-from-snapshot-demo
+  version: 0.0.1
+  description: DLT Apply Changes from Snapshot Demo
+
+variables:
+  my_catalog:
+    description: The UC catalog name
+    default: "main"
+  my_schema:
+    description: The schema name
+    default: "snapshots_${workspace.current_user.id}"
+  num_orders:
+    description: The number of orders to generate.
+    default: "10"
+  num_products:
+    description: The number of products to generate.
+    default: "4"
+  num_customers:
+    description: The number of customers to generate.
+    default: "5"
+  dlt_pipeline_name_prefix:
+    description: The prefix for the DLT pipeline name
+    default: "DLT Apply Changes from Snapshot"
+  job_name_prefix:
+    description: The prefix for the job name
+    default: "DLT Snapshot Ingestion"
+
+resources:
+  pipelines:
+    dlt_snapshot_ingestion_pattern1:
+      target: "orders_pattern1_${workspace.current_user.id}"
+      development: true
+      continuous: false
+      channel: "CURRENT"
+      photon: false
+      libraries:
+        - notebook:
+            path: ./src/notebooks/process_snapshot_pattern1.py
+        - notebook:
+            path: ./src/notebooks/order_count_by_status_pattern1.sql   
+      edition: "ADVANCED"
+      permissions:
+            - level: CAN_VIEW
+              group_name: users
+      clusters:
+        - label: "default"
+          num_workers: 1
+      configuration:
+        snapshot_source_database: ${var.my_schema}
+
+    dlt_snapshot_ingestion_pattern2:
+      target: "orders_pattern2_${workspace.current_user.id}"
+      development: true
+      continuous: false
+      channel: "CURRENT"
+      photon: false
+      libraries:
+        - notebook:
+            path: ./src/notebooks/process_snapshot_pattern2.py
+        - notebook:
+            path: ./src/notebooks/order_count_by_status_pattern2.sql   
+      edition: "ADVANCED"
+      permissions:
+            - level: CAN_VIEW
+              group_name: users
+      clusters:
+        - label: "default"
+          num_workers: 1
+  jobs:
+    dlt_snapshot_ingestion_pattern1_job:
+      permissions:
+        - level: CAN_VIEW
+          group_name: users
+      job_clusters: 
+        - job_cluster_key: job_cluster
+          new_cluster:
+                spark_version: 13.3.x-scala2.12
+                node_type_id: i3.xlarge
+                num_workers: 1
+      tasks:
+        - task_key: generate_orders_snapshot
+          job_cluster_key: job_cluster
+          notebook_task:
+            notebook_path: ./src/notebooks/generate_snapshot.py
+            base_parameters:
+              snapshot_pattern: "Pattern 1"
+              database: ${var.my_schema}
+              num_orders: ${var.num_orders}
+              num_products: ${var.num_products}
+              num_customers: ${var.num_customers}
+
+          libraries:
+            - pypi:
+                package: Faker==19.6.2
+        - task_key: cdc_from_snapshot
+          depends_on:
+            - task_key: generate_orders_snapshot
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.dlt_snapshot_ingestion_pattern1.id}
+            full_refresh: false
+
+    dlt_snapshot_ingestion_pattern2_job:
+      permissions:
+        - level: CAN_VIEW
+          group_name: users
+      job_clusters: 
+        - job_cluster_key: job_cluster
+          new_cluster:
+                spark_version: 13.3.x-scala2.12
+                node_type_id: i3.xlarge
+                num_workers: 1
+      tasks:
+        - task_key: generate_orders_snapshot
+          job_cluster_key: job_cluster
+          notebook_task:
+            notebook_path: ./src/notebooks/generate_snapshot.py
+            base_parameters:
+              snapshot_pattern: "Pattern 2"
+              database: ${var.my_schema}
+              num_orders: ${var.num_orders}
+              num_products: ${var.num_products}
+              num_customers: ${var.num_customers}
+          libraries:
+            - pypi:
+                package: Faker==19.6.2
+        - task_key: cdc_from_snapshot
+          depends_on:
+            - task_key: generate_orders_snapshot
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.dlt_snapshot_ingestion_pattern2.id}
+            full_refresh: false
+targets:
+  development:
+    workspace:
+      default: true
+    resources:
+      pipelines:
+        dlt_snapshot_ingestion_pattern1:
+          name: "${var.dlt_pipeline_name_prefix} - Pattern1 [${workspace.current_user.id}]"
+          configuration:
+            snapshot_source_catalog: "hive_metastore"
+        dlt_snapshot_ingestion_pattern2:
+          name: "${var.dlt_pipeline_name_prefix} - Pattern2 [${workspace.current_user.id}]"
+          configuration:
+            snapshot_path: "dbfs:/snapshots_${workspace.current_user.id}/orders/"
+      jobs:
+        dlt_snapshot_ingestion_pattern1_job:
+          name: "${var.job_name_prefix} - Pattern1 [${workspace.current_user.id}]"
+          tasks:
+            - task_key: generate_orders_snapshot
+              notebook_task:
+                base_parameters:
+                  is_UC: "false"
+                  catalog: "hive_metastore"
+
+        dlt_snapshot_ingestion_pattern2_job:
+            name: "${var.job_name_prefix} - Pattern2 [${workspace.current_user.id}]"
+            tasks:
+              - task_key: generate_orders_snapshot
+                notebook_task:
+                  base_parameters:
+                    is_UC: "false"
+                    snapshot_path: "dbfs:/snapshots_${workspace.current_user.id}/orders/"
+
+  development-uc:
+    resources:
+      pipelines:
+        dlt_snapshot_ingestion_pattern1:
+          name: "${var.dlt_pipeline_name_prefix} - Pattern1-UC [${workspace.current_user.id}]"
+          catalog: ${var.my_catalog}
+          configuration:
+            snapshot_source_catalog: ${var.my_catalog}
+        dlt_snapshot_ingestion_pattern2:
+          name: "${var.dlt_pipeline_name_prefix} - Pattern2-UC [${workspace.current_user.id}]"
+          catalog: ${var.my_catalog}
+          configuration:
+             snapshot_path: "dbfs:/Volumes/${var.my_catalog}/snapshots_${workspace.current_user.id}/orders_snapshot"
+      jobs:
+        dlt_snapshot_ingestion_pattern1_job:
+          name: "${var.job_name_prefix} - Pattern1-UC [${workspace.current_user.id}]"
+          tasks:
+            - task_key: generate_orders_snapshot
+              notebook_task:
+                base_parameters:
+                  is_UC: "true"
+                  catalog: ${var.my_catalog}
+
+        dlt_snapshot_ingestion_pattern2_job:
+          name: "${var.job_name_prefix} - Pattern2-UC [${workspace.current_user.id}]"
+          tasks:
+            - task_key: generate_orders_snapshot
+              notebook_task:
+                base_parameters:
+                  is_UC: "true"
+                  catalog: ${var.my_catalog}
+    workspace:
+      default: false

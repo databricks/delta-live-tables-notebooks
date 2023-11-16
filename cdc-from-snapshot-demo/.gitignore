@@ -1,4 +1,5 @@
-
+.idea
 .databricks
 .metals
 .vscode
+.DS_Store
