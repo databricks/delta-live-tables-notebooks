@@ -71,10 +71,7 @@ Detailed calculation steps:
 
 1. `(10+10+40+200+30)/10 = 29`
 
-The `applyInPandasWithState()` Spark action will run one instance of our function (`func` in the signature above) on each of the groupings of data for which unique keys exist in that Structured Streamingmicrobatch. 
-
-In the accompanying notebook, you will see an implementation of this logic. Before we get started, lets setup our example dataset similar to the above!
- 
 
 ## Solution: DLT + ApplyInPandasWithState for streaming integral calculus
 
+The `applyInPandasWithState()` Spark action will run one instance of our function (`func` in the signature above) on each of the groupings of data for which unique keys exist in that Structured Streaming microbatch. 

@@ -1,5 +1,7 @@
 # Databricks notebook source
-# MAGIC %md # 00 Introduction and Data Setup
+# MAGIC %md # 00 Runbook for DLT Integrals Demo
+# MAGIC
+# MAGIC Use this notebook as your guide to running this multi-part demo from end-to-end. We recommend having it open in one tab, then navigating to the other parts of the Databricks workspace in another tab so you can quickly find your way. 
 # MAGIC
 # MAGIC `This notebook is runnable in any Databricks workspace and was tested on DBR 14.2 ML cluster runtime.`
 # MAGIC
@@ -48,6 +50,13 @@ input_batch = spark.sql(f"""
 display(input_batch)
 
 input_batch.write.format("delta").mode("append").save(demo_path)
+
+# COMMAND ----------
+
+# MAGIC %md ## Pipeline Setup
+# MAGIC Now that we have some initial data ready, lets setup our Delta Live Tables pipeline. 
+# MAGIC
+# MAGIC The logic for the pipeline is contained within noteobok `01_DLT_StatefulTimeWeightedAverage` in the same folder as this current notebook. 
 
 # COMMAND ----------
 
