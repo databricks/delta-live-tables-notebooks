@@ -180,15 +180,15 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC %md
 # MAGIC As before, click `Start` on your DLT pipeline to trigger a new update. Results should look like this:
 # MAGIC
-# MAGIC ![dlt update 3 ]()
-# MAGIC ![dlt update 3 results]()
+# MAGIC ![dlt update 3 ](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update3.png?raw=true)
+# MAGIC ![dlt update 3 results](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update3results.png?raw=true)
 # MAGIC
 # MAGIC We had 5 groups of sample data, but only 3 are finally written out because:
 # MAGIC * Key groups 2,3,4 are appended to the `dlt_integrals` table
 # MAGIC * Key group 5 is still open, and will continue buffering results until its watermark passes. 
-# MAGIC * Key group 1 is dropped. If we go to the cluster from the DLT UI, we can see that one record was dropped due to the watermark. 
+# MAGIC * Key group 1 is dropped. If we go to the cluster from the DLT UI, we can see that one record was dropped due to the watermark. See this on the Structured Streaming tab of the Spark UI:
 # MAGIC
-# MAGIC
+# MAGIC ![dlt update 3 watermark]()
 
 # COMMAND ----------
 
