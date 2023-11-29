@@ -80,7 +80,7 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC
 # MAGIC Once done, click `Create` - you now have a DLT pipeline to run this logic! You can double-check your config matches the screenshot below:
 # MAGIC
-# MAGIC ![dlt config](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_config.png?raw=true)
+# MAGIC <img src="https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_config.png?raw=true" alt="dlt config" width="800" height="auto"/>
 
 # COMMAND ----------
 
@@ -186,18 +186,59 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC We had 5 groups of sample data, but only 3 are finally written out because:
 # MAGIC * Key groups 2,3,4 are appended to the `dlt_integrals` table
 # MAGIC * Key group 5 is still open, and will continue buffering results until its watermark passes. 
-# MAGIC * Key group 1 is dropped. If we go to the cluster from the DLT UI, we can see that one record was dropped due to the watermark. See this on the Structured Streaming tab of the Spark UI:
+# MAGIC * Key group 1 is dropped. 
 # MAGIC
-# MAGIC ![dlt update 3 watermark]()
+# MAGIC If we go to the cluster from the DLT UI, we can see that one record was dropped due to the watermark. See this on the Structured Streaming tab of the Spark UI, where you can also observe useful state status and memory items:
+# MAGIC
+# MAGIC ![dlt update 3 watermark](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update3watermarking.png?raw=true)
 
 # COMMAND ----------
 
 # MAGIC %md ## 7 Production Considerations:
 # MAGIC
-# MAGIC Even within Delta Live Tables, we need to consider
-# MAGIC * Think twice before Full Refresh!
-# MAGIC * Switch to Enhanced Autoscaling
-# MAGIC * Review Stateful Streaming Best Practices
-# MAGIC * Uses RocksDB for State Store
-# MAGIC * Think about how to do historical loads
+# MAGIC This concludes this demo notebook for how to calculate integrals (and time-weighted averages in particular) from within a DLT pipeline. The applications for this approach are vast, and we hope it helps inspire some cutting-edge use-cases! But before we conclude, lets cover a few things:
 # MAGIC
+# MAGIC When moving to Production with Delta Live Tables (and Stateful Streaming in general):
+# MAGIC * Switch to [Enhanced Autoscaling](https://learn.microsoft.com/en-us/azure/databricks/delta-live-tables/auto-scaling) and set a high max scaling threshold for large data volumes. Also enable Photon for latency-sensitive pipelines, and switch the pipeline to [Production Mode](https://learn.microsoft.com/en-us/azure/databricks/delta-live-tables/updates#optimize-execution) when deploying.
+# MAGIC * Review Best Practices: [Streaming in Production: Collected Best Practices](https://www.databricks.com/blog/2022/12/12/streaming-production-collected-best-practices.html)
+# MAGIC * Uses [RocksDB for State Store](https://docs.databricks.com/en/structured-streaming/rocksdb-state-store.html).
+# MAGIC * Think twice before Full Refresh! Especially with Stateful Streaming, a Full Refresh of a DLT pipeline will "erase" all the state you've buffered and recompute everything from scratch. Depending on how your source data has evolved, it may be impossible to reproduce the current state of your table!
+# MAGIC * Think about how to do historical loads. If you need to load years of historical data that does not need to be "statefully processed" because you're no longer waiting for new data to arrive for those key groups, you might consider appending it directly to your final table. [DLT Streaming Tables support DML operations](https://learn.microsoft.com/en-us/azure/databricks/delta-live-tables/unity-catalog#--add-change-or-delete-data-in-a-streaming-table) such as appends, and it may be significantly more efficient to "side load" this historical data outside of DLT. 
+# MAGIC
+# MAGIC
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md ## Appendix
+# MAGIC
+# MAGIC Sample DLT JSON configuration, can be copy/pasted into JSON section of DLT UI. Replace all `<REPLACE>` sections appropriate to your environment.
+# MAGIC ```
+# MAGIC {
+# MAGIC     "clusters": [
+# MAGIC         {
+# MAGIC             "label": "default",
+# MAGIC             "num_workers": 0
+# MAGIC         }
+# MAGIC     ],
+# MAGIC     "development": true,
+# MAGIC     "continuous": false,
+# MAGIC     "channel": "CURRENT",
+# MAGIC     "photon": false,
+# MAGIC     "libraries": [
+# MAGIC         {
+# MAGIC             "notebook": {
+# MAGIC                 "path": "/Repos/<REPLACE>/delta-live-tables-notebooks/applyInPandasWithState-integral-calculus/01_DLT_StatefulTimeWeightedAverage"
+# MAGIC             }
+# MAGIC         }
+# MAGIC     ],
+# MAGIC     "name": "Demo_StatefulTimeWeightedAverage",
+# MAGIC     "edition": "CORE",
+# MAGIC     "configuration": {
+# MAGIC         "schema_name": "demo_dlt_integrals",
+# MAGIC         "raw_table": "raw"
+# MAGIC     },
+# MAGIC     "target": "demo_dlt_integrals",
+# MAGIC     "data_sampling": false
+# MAGIC }
+# MAGIC ```
