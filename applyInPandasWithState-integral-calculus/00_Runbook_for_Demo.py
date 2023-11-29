@@ -80,7 +80,7 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC
 # MAGIC Once done, click `Create` - you now have a DLT pipeline to run this logic! You can double-check your config matches the screenshot below:
 # MAGIC
-# MAGIC ![dlt config](./resources/dlt_config.png)
+# MAGIC ![dlt config](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_config.png?raw=true)
 
 # COMMAND ----------
 
@@ -88,7 +88,7 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC
 # MAGIC Now we can process our first records through our DLT pipeline. At the top-right of your newly-create pipeline, click `Start`. This will kick off a DLT update, which is the incremental unit of processing for Triggered pipelines. This first update will process the 2 records that we created earlier in this notebook. You may need to wait a few minutes for the cluster to be provisioned.
 # MAGIC
-# MAGIC ![dlt update 1](./resources/dlt_update1.png)
+# MAGIC ![dlt update 1](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update1.png?raw=true)
 # MAGIC
 # MAGIC Note in this first batch, the second table `dlt_integrals` does not have any records written to it, as our **time interval window for these records has not "closed"**. The pipeline will continue to buffer observations for a given set of keys until the watermark we've specified with `.withWatermark('timestamp_10min_interval','10 minutes')` passes. 
 
@@ -126,11 +126,11 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC
 # MAGIC Your results should look like the below: 3 new rows were appended to the input table, and we emitted one integral value to the `dlt_integrals` table. 
 # MAGIC
-# MAGIC ![dlt update 2](./resources/dlt_update2.png)
+# MAGIC ![dlt update 2](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update2.png?raw=true)
 # MAGIC
 # MAGIC Taking a closer look, we can click on the Target table hyperlink in the table details, and see a data preview. This is the value **29** we expect, which is the time weighted average of the 4 records in Key Group 1!
 # MAGIC
-# MAGIC ![dlt update 2 results](./resources/dlt_update2results.png)
+# MAGIC ![dlt update 2 results](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update2results.png?raw=true)
 
 # COMMAND ----------
 
@@ -141,3 +141,63 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC * Out of sequence data
 # MAGIC
 # MAGIC Notice as well that if we go to the cluster from the DLT UI, we can observe how many records each microbatch is dropping due to the watermark:
+
+# COMMAND ----------
+
+# Time window 3
+input_batch = spark.sql(f"""
+    SELECT
+      col1 AS location_id,
+      col2 AS sensor,
+      cast(col3 AS TIMESTAMP) AS timestamp,
+      cast(col4 AS FLOAT) as value
+    FROM (
+      VALUES
+      -- Key Group 1, this records get dropped by the watermark as its output has already been emitted
+      ("L1", "Wind_Speed", "2024-01-01 12:18:00.000000", 35.0),
+
+      -- Key Group 2, the group is still open to new records.
+      ("L1", "Wind_Speed", "2024-01-01 12:41:00.000000", 6.0),  
+
+      -- Key Group 3, data is not necessarily in-order in source table
+      ("L2", "Oil_Temp", "2024-01-01 12:48:00.000000", 110.0),
+      ("L2", "Oil_Temp", "2024-01-01 12:41:00.000000", 100.0),
+      ("L2", "Oil_Temp", "2024-01-01 12:45:00.000000", 95.0 ),
+
+      -- Key Group 4, only 1 records, so this values becomes time-weighted over the interval
+      ("L3", "Humidity", "2024-01-01 12:50:00.000000", 32.5),
+
+      -- Key Group 5, these records cause the earlier time intervals to expire
+      ("L3", "Wind_Speed", "2024-01-01 13:30:00.000000", 50.0)
+    );  
+  """)
+display(input_batch)
+
+input_batch.write.format("delta").mode("append").save(demo_path)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC As before, click `Start` on your DLT pipeline to trigger a new update. Results should look like this:
+# MAGIC
+# MAGIC ![dlt update 3 ]()
+# MAGIC ![dlt update 3 results]()
+# MAGIC
+# MAGIC We had 5 groups of sample data, but only 3 are finally written out because:
+# MAGIC * Key groups 2,3,4 are appended to the `dlt_integrals` table
+# MAGIC * Key group 5 is still open, and will continue buffering results until its watermark passes. 
+# MAGIC * Key group 1 is dropped. If we go to the cluster from the DLT UI, we can see that one record was dropped due to the watermark. 
+# MAGIC
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md ## 7 Production Considerations:
+# MAGIC
+# MAGIC Even within Delta Live Tables, we need to consider
+# MAGIC * Think twice before Full Refresh!
+# MAGIC * Switch to Enhanced Autoscaling
+# MAGIC * Review Stateful Streaming Best Practices
+# MAGIC * Uses RocksDB for State Store
+# MAGIC * Think about how to do historical loads
+# MAGIC
