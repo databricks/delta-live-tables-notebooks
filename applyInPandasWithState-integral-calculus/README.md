@@ -1,25 +1,8 @@
-These are accompanying code samples for the blog post `...`
+These are accompanying code samples for the Databricks blog post `Integrating Insights: Integral Calculus for Low-Latency Streaming Analytics`
 
-# Making Fast Data Useful: Integral Calculus for Low-Latency Streaming Analytics
+# Integrating Insights: Integral Calculus for Low-Latency Streaming Analytics
 
-## Intro
-## Understanding applyInPandasWithState()
-
-Introduced in Apache Spark 3.4.0, [applyInPandasWithState()](https://spark.apache.org/docs/3.1.2/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html), allows you to efficiently apply a function written in Pandas to grouped data in Spark while maintaining state. It is conceptually similar to [applyInPandas()](https://spark.apache.org/docs/3.1.2/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html), with the added benefit of being able to use it on a Stateful Streaming pipeline with watermarking in place. See this blog for a basic overview of this concept: [Python Arbitrary Stateful Processing in Structured Streaming](https://www.databricks.com/blog/2022/10/18/python-arbitrary-stateful-processing-structured-streaming.html)
-
-Let’s review the signature of using this function in Spark Structured Streaming :
-
-```
-def applyInPandasWithState(
-    func:             # Takes in Pandas DF, perform any Python actions needed 
-    outputStructType: # Schema for the output DataFrame.
-    stateStructType:  # Schema for the state variable  
-    outputMode:       # Output mode such as "Update" or "Append"
-    timeoutConf:      # Timeout setting for when to trigger group state timeout
-) -> DataFrame        # Returns DataFrame
-```
-
-## Problem: integrals are needed to calculate valuable metrics
+## Problem Statement: Integrals are needed to calculate valuable metrics
 
 Mechanical and digital engineers both have a reliance on math and statistics to coax insights out of complex, noisy data. Among the most important domains is calculus, which gives us integrals, most commonly described as calculating the area under a curve. This is useful for data engineers as many data that express a rate can be integrated to produce a useful measurement. For example:
 * Point-in-time sensor readings, once integrated, can produce time-weighted averages
@@ -28,7 +11,12 @@ Mechanical and digital engineers both have a reliance on math and statistics to 
 
 Of course, at some point most students learn how to calculate integrals, and the computation itself is simple on batch, static data. However, there are common engineering patterns that require low-latency, incremental computation of integrals to realize business value, such as setting alerts based on equipment performance thresholds, or detecting anomalies in logistics use-cases.
 
-Calculating integrals are just one tool in a toolbelt for modern data engineers working on real-world sensor data. These are just a few examples, and while the techniques described below can be adapted to many data engineering pipelines, the remainder of this blog will focus on calculating streaming integrals on real-world sensor data to derive time-weighted averages. 
+Calculating integrals are just one tool in a toolbelt for modern data engineers working on real-world sensor data. These are just a few examples, and while the techniques described below can be adapted to many data engineering pipelines, the remainder of this blog will focus on calculating streaming integrals on real-world sensor data to derive time-weighted averages.
+
+The supporting code in this repo:
+* Describes the data engineering problem to be solved, and a final solution using Delta Live Tables --> `README.md`
+* Step-by-step Runbook to build a DLT pipeline and simulate data arrival --> `00_Runbook_for_demo`
+* DLT logic as a notebook library performing stateful time-weighted averages --> `01_DLT_StatefulTimeWeightedAverage`
 
 ### Calculation Overview
 
@@ -56,7 +44,7 @@ Taking the first 4 rows, we define a set of "keys" for this group:
 
 **Our time-weighted average result should be: 29**
 
-![time weighted average ex](./resources/twa_ex.png)
+![time weighted average ex](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/twa_ex.png?raw=true)
 
 Detailed calculation steps: 
 1. `10 x 1 min` --> We use the first reading in our interval as a "synthetic" data point, as we do not know the value the last interval ended as each set of state keys are independent
@@ -74,4 +62,22 @@ Detailed calculation steps:
 
 ## Solution: DLT + ApplyInPandasWithState for streaming integral calculus
 
-The `applyInPandasWithState()` Spark action will run one instance of our function (`func` in the signature above) on each of the groupings of data for which unique keys exist in that Structured Streaming microbatch. 
+Introduced in Apache Spark 3.4.0, [applyInPandasWithState()](https://spark.apache.org/docs/3.1.2/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html), allows you to efficiently apply a function written in Pandas to grouped data in Spark while maintaining state. It is conceptually similar to [applyInPandas()](https://spark.apache.org/docs/3.1.2/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html), with the added benefit of being able to use it on a Stateful Streaming pipeline with watermarking in place. See this blog for a basic overview of this concept: [Python Arbitrary Stateful Processing in Structured Streaming](https://www.databricks.com/blog/2022/10/18/python-arbitrary-stateful-processing-structured-streaming.html)
+
+The `applyInPandasWithState()` Spark action will run one instance of our function (`func` in the signature above) on each of the groupings of data for which unique keys exist in that Structured Streaming microbatch. This is a scalable method to perform arbitrary computations in Python (integral calculus via Rieman sums, in our case) on large volumes of streaming data. 
+
+Let’s review the signature of using this function in Spark Structured Streaming :
+
+```
+def applyInPandasWithState(
+    func:             # Takes in Pandas DF, perform any Python actions needed 
+    outputStructType: # Schema for the output DataFrame.
+    stateStructType:  # Schema for the state variable  
+    outputMode:       # Output mode such as "Update" or "Append"
+    timeoutConf:      # Timeout setting for when to trigger group state timeout
+) -> DataFrame        # Returns DataFrame
+```
+
+The notebook `00_Runbook_for_Demo` will walk you through step-by-step to create a highly performant and easy to understand DLT pipeline focused on these concepts. The results demonstrate that it is possible to efficiently and incrementally compute integral-derived metrics such as time-weighted averages on high-volume data such as wind turbine sensors. Integrals are just one tool in the modern data engineers toolbelt, and with Databricks it is simple to apply them to business-critical applications involving streaming data. 
+
+**Let's get started!** Navigate to the notebook `00_Runbook_for_Demo` in this same repo. 
