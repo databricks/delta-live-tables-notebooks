@@ -7,10 +7,6 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./resources/config
-
-# COMMAND ----------
-
 import dlt
 import pandas as pd
 from typing import Iterator
@@ -20,20 +16,32 @@ from pyspark.sql.types import StructType, StructField, ArrayType, TimestampType,
 
 # COMMAND ----------
 
+# Get parameters from Pipeline Conf
+try: schema_name = spark.conf.get("schema_name"); raw_table = spark.conf.get("raw_table")
+except: schema_name = "demo_dlt_integrals"; raw_table = "raw"
+
+# Determine if UC is being used, if not use HMS
+try: catalog = spark.conf.get("catalog")
+except: catalog = "hive_metastore"
+
+print(f"Sourcing data from {catalog}.{schema_name}.{raw_table}")
+
+# COMMAND ----------
+
 # MAGIC %md # Source table for raw events
 # MAGIC
 # MAGIC First, we will create a DLT table to read from our source of events as a stream. We do this here for demo purposes so the table appears in our DLT UI and to help understand how records flow through the state logic. 
 # MAGIC
-# MAGIC For more information on DLT decorator (e.g. `@dlt.table()`) and other syntax, please see [Delta Live Tables intro](https://www.databricks.com/discover/pages/getting-started-with-delta-live-tables).
+# MAGIC For more information on DLT decorators (e.g. `@dlt.table()`) and other syntax, please see [Delta Live Tables intro](https://www.databricks.com/discover/pages/getting-started-with-delta-live-tables).
 
 # COMMAND ----------
 
 @dlt.table()
-def raw_table():
+def input_table():
   df = (
       spark
         .readStream.format("delta")
-        .table(f"{schema_name}.{source_table}")
+        .table(f"{catalog}.{schema_name}.{raw_table}")
    )
   return df
 
@@ -289,10 +297,10 @@ def dlt_integrals():
   ])
   
   # Read source data from the first DLT table we created in this notebook
-  df = dlt.read_stream("raw_table")
+  df = dlt.read_stream("input_table")
 
   # Determine which timestamp interval each record belongs to
-  # This is effectively a ceil() function, but handles boundery conditions
+  # This is effectively a ceil() function, but handles boundary conditions
   df = (df.withColumn("timestamp_10min_interval",
                                   when(
                                     (ceil(unix_timestamp(col("timestamp")) / 600) * 600).cast("timestamp") == col("timestamp"),
@@ -321,4 +329,4 @@ def dlt_integrals():
 
 # COMMAND ----------
 
-# MAGIC %md Now that you've reviewed the DLT logic, we're ready to add this to a DLT pipeline! Return to the 00_Runbook notebook for next steps.
+# MAGIC %md Now that you've reviewed the DLT logic, we're ready to add this to a DLT pipeline! Return to the `00_Runbook_for_Demo` notebook to put this logic into a DLT pipeline.
