@@ -1,4 +1,4 @@
-These are accompanying code samples for the Databricks blog post `Integrating Insights: Integral Calculus for Low-Latency Streaming Analytics`
+These are accompanying code samples for the Databricks blog post `Integrating Insights: Integral Calculus for Low-Latency Streaming Analytics`. You should [use Repos to import then run this example into your Databricks workspace](https://docs.databricks.com/en/repos/git-operations-with-repos.html#clone-a-repo-connected-to-a-remote-repo).
 
 # Integrating Insights: Integral Calculus for Low-Latency Streaming Analytics
 
