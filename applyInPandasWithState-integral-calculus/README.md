@@ -64,7 +64,7 @@ Detailed calculation steps:
 
 Introduced in Apache Spark 3.4.0, [applyInPandasWithState()](https://spark.apache.org/docs/3.1.2/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html), allows you to efficiently apply a function written in Pandas to grouped data in Spark while maintaining state. It is conceptually similar to [applyInPandas()](https://spark.apache.org/docs/3.1.2/api/python/reference/api/pyspark.sql.GroupedData.applyInPandas.html), with the added benefit of being able to use it on a Stateful Streaming pipeline with watermarking in place. See this blog for a basic overview of this concept: [Python Arbitrary Stateful Processing in Structured Streaming](https://www.databricks.com/blog/2022/10/18/python-arbitrary-stateful-processing-structured-streaming.html)
 
-The `applyInPandasWithState()` Spark action will run one instance of our function (`func` in the signature above) on each of the groupings of data for which unique keys exist in that Structured Streaming microbatch. This is a scalable method to perform arbitrary computations in Python (integral calculus via Rieman sums, in our case) on large volumes of streaming data. 
+The `applyInPandasWithState()` Spark action will run one instance of our function (`func` in the signature below) on each of the groupings of data for which unique keys exist in that Structured Streaming microbatch. This is a scalable method to perform arbitrary computations in Python (integral calculus via Rieman sums, in our case) on large volumes of streaming data. 
 
 Let’s review the signature of using this function in Spark Structured Streaming :
 
