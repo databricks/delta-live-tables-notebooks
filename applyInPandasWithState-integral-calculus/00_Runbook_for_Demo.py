@@ -64,7 +64,7 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC Now that we have some initial data ready and have reviewd the DLT logic that will run, lets setup our Delta Live Tables pipeline. Note: you will need permissions to create a DLT cluster to follow along. If you do not have unlimited cluster creation entitlements, you can ask your admin to create a [minimal DLT cluster policy](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/clusters/policy-definition#--define-limits-on-delta-live-tables-pipeline-compute)
 # MAGIC
 # MAGIC On the left-nav, click the `Delta Live Tables` icon under Data Engineering. Then, complete these steps:
-# MAGIC 1. At the top of the Delta Live Tables page, click `Create pipeline`
+# MAGIC 1. At the top-right of the Delta Live Tables page, click `Create pipeline`
 # MAGIC 1. In `Pipeline Name`, provide a name such as `Demo_StatefulTimeWeightedAverage`
 # MAGIC 1. Select `Product Edition` as "Core" and `Pipeline Mode` as "Triggered"
 # MAGIC 1. Under the `Source Code Paths` selector, navigate and select the notebook `01_DLT_StatefulTimeWeightedAverage`. (You can select multiple notebooks to run as part of the DLT pipeline)

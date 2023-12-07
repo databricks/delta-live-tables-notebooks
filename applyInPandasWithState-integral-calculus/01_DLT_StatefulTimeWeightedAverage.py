@@ -9,6 +9,7 @@
 
 import dlt
 import pandas as pd
+from datetime import datetime, timedelta
 from typing import Iterator
 from pyspark.sql.functions import *
 from pyspark.sql.streaming.state import GroupState, GroupStateTimeout
@@ -86,8 +87,7 @@ def pd_time_weighted_average(location_id, sensor
       'location_id':location_id,
       'sensor':sensor,
       'value': values_arr,
-      'timestamp': timestamps_arr,
-      'timestamp_10min_interval': timestamp_10min_interval
+      'timestamp': timestamps_arr
       })
 
     # Sort dataframe by timestamp column ascending
@@ -95,18 +95,17 @@ def pd_time_weighted_average(location_id, sensor
 
     # Get first row and use that as the starting value; Set timestamp to start of interval
     opening_row = df_pd.iloc[[0],:].copy()
-    previous_interval_ts = opening_row['timestamp_10min_interval'] - pd.to_timedelta(interval_mins, unit='m')
-    opening_row['timestamp'] = pd.to_datetime(previous_interval_ts)
+    opening_row['timestamp'] = timestamp_10min_interval - timedelta(minutes=10)
 
     # Get latest row for group, make a copy, then reset timestamp to the END of the interval, then append back
     closing_row = df_pd.iloc[[-1],:].copy()
-    closing_row['timestamp'] = closing_row['timestamp_10min_interval'] 
+    closing_row['timestamp'] = timestamp_10min_interval 
 
     # Concat rows back together
     df_agg = pd.concat([opening_row, df_pd, closing_row], ignore_index=True)
 
     # Get count of rows used in calculating this aggregates
-    df_agg['count_rows'] = df_pd.shape[0]
+    count_rows = df_pd.shape[0]
 
     # Calculate difference between current timestamp and start of next one, fill nulls
     df_agg['time_diff'] = df_agg['timestamp'].diff(periods=-1).dt.total_seconds()/60*-1
@@ -117,19 +116,14 @@ def pd_time_weighted_average(location_id, sensor
     df_agg['weighted_value'] = df_agg['value'] * df_agg['time_diff'] 
       
     # Divide the area under the value curve by the number of mins in the interval
-    df_agg['time_interval_weighted_avg'] = df_agg.groupby(df_agg['timestamp_10min_interval'])['weighted_value'].transform('sum')/interval_mins
-
-    # Condense to one row to be returned by function, then rename timestamp columns
-    df_agg = df_agg.groupby(['location_id', 'sensor', 'timestamp_10min_interval']).agg(
-        value      = pd.NamedAgg(column="time_interval_weighted_avg", aggfunc="first"),
-        count_rows = pd.NamedAgg(column="count_rows", aggfunc="max")
-    ).reset_index()
-
-    # Rename timestamp column
-    df_agg = df_agg.rename(columns={"timestamp_10min_interval": "timestamp"})
+    time_interval_weighted_avg = df_agg['weighted_value'].sum() / interval_mins
 
     # Return single Pandas Dataframe row with agg
-    return df_agg
+    return pd.DataFrame({'location_id':[location_id], 
+                         'sensor':[sensor],
+                         'timestamp': [timestamp_10min_interval], # Rename timestamp column
+                         'value': [time_interval_weighted_avg],
+                         'count_rows': [count_rows] })
 
 # COMMAND ----------
 
@@ -299,17 +293,8 @@ def dlt_integrals():
   # Read source data from the first DLT table we created in this notebook
   df = dlt.read_stream("input_table")
 
-  # Determine which timestamp interval each record belongs to
-  # This is effectively a ceil() function, but handles boundary conditions
-  df = (df.withColumn("timestamp_10min_interval",
-                                  when(
-                                    (ceil(unix_timestamp(col("timestamp")) / 600) * 600).cast("timestamp") == col("timestamp"),
-                                    (ceil(unix_timestamp(col("timestamp") + expr("INTERVAL 1 seconds")) / 600) * 600).cast("timestamp")
-                                        )
-                                  .otherwise(
-                                    (ceil(unix_timestamp(col("timestamp")) / 600) * 600).cast("timestamp")
-                                    )
-                                  )
+  # Use window function to determine which timestamp interval each record belongs to
+  df = (df.withColumn("timestamp_10min_interval", window('timestamp', '10 minutes')['end'])
   )
 
   # Apply watermark to our stream based on time interval, then groupBy.Apply() logic
