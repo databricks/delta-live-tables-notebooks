@@ -137,7 +137,7 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC %md ## 6 Ramping up data volumes
 # MAGIC Now lets add a few more key groups to see how this stateful pipeline handles:
 # MAGIC * Records that fall before the current watermark, and should therefore be dropped. These simulate "late-arriving" data
-# MAGIC * Multiple state groups for various locations and sensorts
+# MAGIC * Multiple state groups for various locations and sensors
 # MAGIC * Out of sequence data
 # MAGIC
 # MAGIC Notice as well that if we go to the cluster from the DLT UI, we can observe how many records each microbatch is dropping due to the watermark:
