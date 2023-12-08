@@ -44,7 +44,7 @@ Taking the first 4 rows, we define a set of "keys" for this group:
 
 **Our time-weighted average result should be: 29**
 
-![time weighted average ex](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/twa_ex.png?raw=true)
+![time weighted average ex](https://github.com/databricks/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/twa_ex.png?raw=true)
 
 Detailed calculation steps: 
 1. `10 x 1 min` --> We use the first reading in our interval as a "synthetic" data point, as we do not know the value the last interval ended as each set of state keys are independent
