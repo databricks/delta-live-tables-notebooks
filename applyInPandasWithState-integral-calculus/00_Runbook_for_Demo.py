@@ -80,7 +80,7 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC
 # MAGIC Once done, click `Create` - you now have a DLT pipeline to run this logic! You can double-check your config matches the screenshot below:
 # MAGIC
-# MAGIC <img src="https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_config.png?raw=true" alt="dlt config" width="800" height="auto"/>
+# MAGIC <img src="https://github.com/databricks/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_config.png?raw=true" alt="dlt config" width="800" height="auto"/>
 
 # COMMAND ----------
 
@@ -88,7 +88,7 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC
 # MAGIC Now we can process our first records through our DLT pipeline. At the top-right of your newly-create pipeline, click `Start`. This will kick off a DLT update, which is the incremental unit of processing for Triggered pipelines. This first update will process the 2 records that we created earlier in this notebook. You may need to wait a few minutes for the cluster to be provisioned.
 # MAGIC
-# MAGIC ![dlt update 1](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update1.png?raw=true)
+# MAGIC ![dlt update 1](https://github.com/databricks/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update1.png?raw=true)
 # MAGIC
 # MAGIC Note in this first batch, the second table `dlt_integrals` does not have any records written to it, as our **time interval window for these records has not "closed"**. The pipeline will continue to buffer observations for a given set of keys until the watermark we've specified with `.withWatermark('timestamp_10min_interval','10 minutes')` passes. 
 
@@ -126,11 +126,11 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC
 # MAGIC Your results should look like the below: 3 new rows were appended to the input table, and we emitted one integral value to the `dlt_integrals` table. 
 # MAGIC
-# MAGIC ![dlt update 2](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update2.png?raw=true)
+# MAGIC ![dlt update 2](https://github.com/databricks/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update2.png?raw=true)
 # MAGIC
 # MAGIC Taking a closer look, we can click on the Target table hyperlink in the table details, and see a data preview. This is the value **29** we expect, which is the time weighted average of the 4 records in Key Group 1!
 # MAGIC
-# MAGIC ![dlt update 2 results](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update2results.png?raw=true)
+# MAGIC ![dlt update 2 results](https://github.com/databricks/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update2results.png?raw=true)
 
 # COMMAND ----------
 
@@ -180,8 +180,8 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC %md
 # MAGIC As before, click `Start` on your DLT pipeline to trigger a new update. Results should look like this:
 # MAGIC
-# MAGIC ![dlt update 3 ](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update3.png?raw=true)
-# MAGIC ![dlt update 3 results](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update3results.png?raw=true)
+# MAGIC ![dlt update 3 ](https://github.com/databricks/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update3.png?raw=true)
+# MAGIC ![dlt update 3 results](https://github.com/databricks/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update3results.png?raw=true)
 # MAGIC
 # MAGIC We had 5 groups of sample data, but only 3 are finally written out because:
 # MAGIC * Key groups 2,3,4 are appended to the `dlt_integrals` table
@@ -190,7 +190,7 @@ input_batch.write.format("delta").mode("append").save(demo_path)
 # MAGIC
 # MAGIC If we go to the cluster from the DLT UI, we can see that one record was dropped due to the watermark. See this on the Structured Streaming tab of the Spark UI, where you can also observe useful state status and memory items:
 # MAGIC
-# MAGIC ![dlt update 3 watermark](https://github.com/tj-cycyota/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update3watermarking.png?raw=true)
+# MAGIC ![dlt update 3 watermark](https://github.com/databricks/delta-live-tables-notebooks/blob/main/applyInPandasWithState-integral-calculus/resources/dlt_update3watermarking.png?raw=true)
 
 # COMMAND ----------
 
