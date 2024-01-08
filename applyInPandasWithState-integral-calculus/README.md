@@ -1,6 +1,6 @@
-These are accompanying code samples for the Databricks blog post `Integrating Insights: Integral Calculus for Low-Latency Streaming Analytics`. You should [use Repos to import then run this example into your Databricks workspace](https://docs.databricks.com/en/repos/git-operations-with-repos.html#clone-a-repo-connected-to-a-remote-repo).
+These are accompanying code samples for the Databricks blog post `Manufacturing Insights: Calculating Streaming Integrals on Low-Latency Sensor Data`. You should [use Repos to import then run this example into your Databricks workspace](https://docs.databricks.com/en/repos/git-operations-with-repos.html#clone-a-repo-connected-to-a-remote-repo).
 
-# Integrating Insights: Integral Calculus for Low-Latency Streaming Analytics
+# Manufacturing Insights: Calculating Streaming Integrals on Low-Latency Sensor Data
 
 ## Problem Statement: Integrals are needed to calculate valuable metrics
 
