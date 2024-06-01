@@ -13,7 +13,7 @@ import dlt
 
 json_path = "/databricks-datasets/wikipedia-datasets/data-001/clickstream/raw-uncompressed-json/2015_2_clickstream.json"
 
-@dlt.create_table(
+@dlt.table(
   comment="The raw wikipedia click stream dataset, ingested from /databricks-datasets.",
   table_properties={
     "quality": "bronze"
@@ -25,7 +25,7 @@ def clickstream_raw():
   )
 
 
-@dlt.create_table(
+@dlt.table(
   comment="Wikipedia clickstream dataset with cleaned-up datatypes / column names and quality expectations.",
   table_properties={
     "quality": "silver"
@@ -45,7 +45,7 @@ def clickstream_clean():
   )
 
 
-@dlt.create_table(
+@dlt.table(
   comment="A table of the most common pages that link to the Apache Spark page.",
   table_properties={
     "quality": "gold"  
@@ -62,7 +62,7 @@ def top_spark_referrers():
   )
 
 
-@dlt.create_table(
+@dlt.table(
   comment="A list of the top 50 pages by number of clicks.",
   table_properties={
     "quality": "gold"  
