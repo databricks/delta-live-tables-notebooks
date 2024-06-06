@@ -19,7 +19,7 @@ features = categoricals + numerics
 
 # COMMAND ----------
 
-@dlt.create_table(
+@dlt.table(
   comment="GBT ML scored training dataset based on Loan Risk",  
   table_properties={
     "quality": "gold"
@@ -31,7 +31,7 @@ def gtb_scoring_train_data():
 
 # COMMAND ----------
 
-@dlt.create_table(
+@dlt.table(
   comment="GBT ML scored valid dataset based on Loan Risk",  
   table_properties={
     "quality": "gold"
