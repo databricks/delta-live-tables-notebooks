@@ -11,7 +11,7 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import *
 import dlt
 
-@dlt.create_view(
+@dlt.view(
   comment="The customers buying finished products, ingested from /databricks-datasets."
 )
 def customers():
@@ -20,7 +20,7 @@ def customers():
 
 # COMMAND ----------
 
-@dlt.create_table(
+@dlt.table(
   comment="The raw sales orders, ingested from /databricks-datasets.",
   table_properties={
     "myCompanyPipeline.quality": "bronze",
@@ -38,7 +38,7 @@ def sales_orders_raw():
 
 # COMMAND ----------
 
-@dlt.create_table(
+@dlt.table(
   comment="The cleaned sales orders with valid order_number(s) and partitioned by order_date",
   partition_cols=["order_date"],
   table_properties={
@@ -58,7 +58,7 @@ def sales_orders_cleaned():
 
 # COMMAND ----------
 
-@dlt.create_table(
+@dlt.table(
   comment="Aggregated sales orders in LA",
   table_properties={
     "myCompanyPipeline.quality": "gold",
@@ -77,7 +77,7 @@ def sales_order_in_la():
 
 # COMMAND ----------
 
-@dlt.create_table(
+@dlt.table(
   comment="Sales orders in Chicago",
   table_properties={
     "myCompanyPipeline.quality": "gold",
