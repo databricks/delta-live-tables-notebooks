@@ -12,7 +12,8 @@ NUM_INSERT_ROWS = 10_000_000_000
 
 NUM_ROWS_PER_FILE = 100_000
 
-OUTPUT_LOCATION = "dbfs:/customer_json"
+# Change this to your prefer UC volume path
+OUTPUT_LOCATION = "/Volumes/main/data/datagen/customers"
 
 partitions = ceil(NUM_INSERT_ROWS / NUM_ROWS_PER_FILE)
 print("PARTITIONS: ", partitions)
