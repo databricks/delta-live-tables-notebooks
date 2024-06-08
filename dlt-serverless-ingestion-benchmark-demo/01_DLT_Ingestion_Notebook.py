@@ -2,7 +2,8 @@
 import dlt
 from pyspark.sql.functions import *
 
-DATA_LOCATION = "dbfs:/customer_json"
+# Change this to your prefer UC volume path
+DATA_LOCATION = "/Volumes/main/data/datagen/customers"
 
 @dlt.table
 def customer_ingestion():
