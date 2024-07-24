@@ -48,6 +48,10 @@ databricks bundle deploy --target development-uc
 databricks bundle run dlt_snapshot_ingestion_pattern1_job --target development-uc
 databricks bundle run dlt_snapshot_ingestion_pattern2_job --target development-uc
 ```
+**Note**: For Pattern 2, snapshots are generated at hour granularity. So, you'll need to run the job hourly. 
+If you run the job multiple times in the same hour, you'll essentially overwrite the same snapshot. To generate a new snapshot, you'll need to wait for the next hour to start.
+You could also modify the job settings to run it hourly.
+
 
 To view the Job runs, you can go to your Databricks workspace and go to `Workflow` and `Job runs`. You can further filter the job runs by clicking on `Only my job runs` and you should see the job your runs as shown below.
 

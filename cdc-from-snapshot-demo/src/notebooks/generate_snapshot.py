@@ -7,9 +7,6 @@ from pyspark.sql.types import *
 from pyspark.sql.functions import *
 
 # COMMAND ----------
-user_id = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().get("userId").get()
-
-# COMMAND ----------
 # DBTITLE 1,Notebook Parameters
 dbutils.widgets.removeAll()
 
@@ -19,19 +16,21 @@ dbutils.widgets.text(name="num_orders", defaultValue="10") # number of orders to
 dbutils.widgets.text(name="num_customers", defaultValue="4") # number of customers to generate
 dbutils.widgets.text(name="num_products", defaultValue="5") # number of product ids to generate
 dbutils.widgets.dropdown(name="is_UC", defaultValue="False", choices=["True", "False"])
-
+dbutils.widgets.text("user_id", "")
 
 is_UC = True if dbutils.widgets.get("is_UC").lower() == "true" else False
 snapshot_pattern = dbutils.widgets.get("snapshot_pattern")
 num_orders = int(dbutils.widgets.get("num_orders"))
 num_customers = int(dbutils.widgets.get("num_customers"))
 num_products = int(dbutils.widgets.get("num_products"))
+user_id = dbutils.widgets.get("user_id")
 
 print(f"""Number of Orders: {num_orders}
     Number of Customers: {num_customers}
     Number of Products: {num_products}
     Snapshot Pattern: {snapshot_pattern}
     is_UC: {is_UC}
+    user_id: {user_id}
     """)
 
 
@@ -190,21 +189,26 @@ order_schema = StructType([
 ])
 
 def get_initial_order_snapshot():
+    print(f"Generating initial snapshot for orders table at {datetime.now()}")
     initial_orders = generate_order_data(num_orders, 1, num_customers, num_products)
     initial_orders_snapshot = spark.createDataFrame(initial_orders, schema=order_schema)
     print(f"Initial snpashot data:  {display(initial_orders_snapshot)}")
     return initial_orders_snapshot
 
-
+def get_latest_snapshot(snapshot_base_path):
+    all_snpapshots = dbutils.fs.ls(snapshot_base_path)
+    sorted_snapshots = sorted(all_snpapshots, key=lambda x: datetime.strptime(x.name.strip('/"'), '%Y-%m-%d %H'), reverse=True)
+    most_recent_snapshot_path = sorted_snapshots[0].path
+    return most_recent_snapshot_path
+    
 def get_incremental_order_snapshot(pattern):
+    print(f"Generating incremental snapshot for orders table at {datetime.now()}")
     existing_orders = None
     if pattern == 'Pattern 1':
         existing_orders = spark.table(table_name)
     elif pattern == 'Pattern 2':
-        all_snpapshots = dbutils.fs.ls(snapshot_path)
-        sorted_snapshots = sorted(all_snpapshots, key=lambda x: x.modificationTime, reverse=True)
-        most_recent_snapshot_path = sorted_snapshots[0].path
-        print(f"Loading most recent snapshot from path: {most_recent_snapshot_path}")
+        most_recent_snapshot_path = get_latest_snapshot(snapshot_path) 
+        print(f"Getting base data from the most recent snapshot: {most_recent_snapshot_path}")
         existing_orders = spark.read.format("parquet").load(path=most_recent_snapshot_path)
     else:
         raise ValueError(f"Unknown Pattern - {pattern}")
@@ -258,9 +262,9 @@ def get_incremental_order_snapshot(pattern):
 # COMMAND ----------
 # write snapshots
 if snapshot_pattern == 'Pattern 1':
-    print(f"""Generating Order Snapshot Data for Pattern {snapshot_pattern}. 
-The order snapshot data will be written to the delta table {table_name}.
-Every new snapshot data will overwrite the existing delta table.""")
+    print(f"""Generating Snapshot for orders table for {snapshot_pattern}.
+          The order snapshot data will be written to the delta table {table_name}.
+          Every new snapshot data will overwrite the existing delta table.""")
     table_exists = spark.catalog.tableExists(table_name)
     # check if table is empty
     table_empty = spark.table(table_name).count() == 0 if table_exists else True   
@@ -297,11 +301,9 @@ Every new snapshot data will overwrite the existing delta table.""")
         print(f"dedup_initial_snapshot:\n")
         dedup_initial_snapshot.show(20, False)
 elif snapshot_pattern == 'Pattern 2':
-    print(f"""Generating Order Snapshot Data for Pattern {snapshot_pattern}. 
-The order snapshot data will be written to the given snapshot path: {snapshot_path}.
-Every new snapshot data will be written to a new path in parquet formats. 
-The new path is constructed as: {snapshot_path}/datetime=yyyy-mm-dd hh""")
-
+    print(f"""Generating snapshot for orders table for {snapshot_pattern}.
+          Each snapshot data will be written to a new path in parquet formats.
+          The new path is constructed as: {snapshot_path}/yyyy-mm-dd hh. Timestamp is based on datetime.now()""")
     path_exists = False
     try:
         path_exists = len(dbutils.fs.ls(snapshot_path)) >= 1 if len(snapshot_path) > 0 else False
@@ -310,11 +312,15 @@ The new path is constructed as: {snapshot_path}/datetime=yyyy-mm-dd hh""")
 
     # construct a path for this snapshot
     current_datetime = datetime.now()
-    datetime_str = current_datetime.strftime('"%Y-%m-%d %H"')
-    new_snapshot_path = snapshot_path + "/datetime=" + datetime_str
+    datetime_str = current_datetime.strftime('%Y-%m-%d %H')
+    new_snapshot_path = snapshot_path + "/" + datetime_str
     if path_exists:
+        existing_latest_snapshot_path = get_latest_snapshot(snapshot_path)
         print(
-            f"Previous snapshots Found at path  {snapshot_path}. New snapshots are created with updates and inserts, and deletes")
+            f"""Previous snapshots found at path {snapshot_path}.
+            The existing latest snapshot is: {existing_latest_snapshot_path}.
+            The new snapshot will be created at path: {new_snapshot_path} with updates and inserts, and deletes""")
+
         new_snapshot = get_incremental_order_snapshot(snapshot_pattern)
         dedup_new_snapshot = new_snapshot.dropDuplicates(
             subset=["order_id", "price", "order_status", "customer_id", "product_id"])
@@ -328,8 +334,7 @@ The new path is constructed as: {snapshot_path}/datetime=yyyy-mm-dd hh""")
         )
         print(f"dedup_new_snapshot:\n")
         dedup_new_snapshot.show(20, False)
-    else:
-        print(f"Initial orders snapshot are created and written to path {snapshot_path} in Parquet format")
+    else:        
         initial_snapshot = get_initial_order_snapshot()
         dedup_initial_snapshot = initial_snapshot.dropDuplicates(
             subset=["order_id", "price", "order_status", "customer_id", "product_id"])
@@ -341,6 +346,7 @@ The new path is constructed as: {snapshot_path}/datetime=yyyy-mm-dd hh""")
             .save(new_snapshot_path)
         )
         print(f"dedup_initial_snapshot:\n")
+        print(f"Initial orders snapshot is created and written to path {new_snapshot_path} in Parquet format")
         dedup_initial_snapshot.show(20, False)
 else:
     raise ValueError(f"Unknown Pattern - {pattern}")

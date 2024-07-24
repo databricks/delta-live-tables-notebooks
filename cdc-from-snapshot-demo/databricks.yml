@@ -1,7 +1,6 @@
+# yaml-language-server: $schema=bundle_config_schema.json 
 bundle:
   name: dlt-apply-changes-from-snapshot-demo
-  version: 0.0.1
-  description: DLT Apply Changes from Snapshot Demo
 
 variables:
   my_catalog:
@@ -75,9 +74,9 @@ resources:
       job_clusters: 
         - job_cluster_key: job_cluster
           new_cluster:
-                spark_version: 13.3.x-scala2.12
+                spark_version: 14.3.x-scala2.12
                 node_type_id: i3.xlarge
-                num_workers: 1
+                num_workers: 1        
       tasks:
         - task_key: generate_orders_snapshot
           job_cluster_key: job_cluster
@@ -89,7 +88,7 @@ resources:
               num_orders: ${var.num_orders}
               num_products: ${var.num_products}
               num_customers: ${var.num_customers}
-
+              user_id: ${workspace.current_user.id}
           libraries:
             - pypi:
                 package: Faker==19.6.2
@@ -121,6 +120,7 @@ resources:
               num_orders: ${var.num_orders}
               num_products: ${var.num_products}
               num_customers: ${var.num_customers}
+              user_id: ${workspace.current_user.id}
           libraries:
             - pypi:
                 package: Faker==19.6.2
@@ -132,8 +132,7 @@ resources:
             full_refresh: false
 targets:
   development:
-    workspace:
-      default: true
+    default: true
     resources:
       pipelines:
         dlt_snapshot_ingestion_pattern1:
@@ -194,5 +193,4 @@ targets:
                 base_parameters:
                   is_UC: "true"
                   catalog: ${var.my_catalog}
-    workspace:
-      default: false
+    default: false
