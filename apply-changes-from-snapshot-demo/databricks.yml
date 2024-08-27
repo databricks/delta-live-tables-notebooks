@@ -3,6 +3,12 @@ bundle:
   name: dlt-apply-changes-from-snapshot-demo
 
 variables:
+  my_dbr_version:
+    description: The Databricks Runtime version
+    default: "14.3.x-scala2.12"
+  my_node_type_id:
+    description: The node type ID
+    default: "i3.xlarge" 
   my_catalog:
     description: The UC catalog name
     default: "main"
@@ -74,8 +80,8 @@ resources:
       job_clusters: 
         - job_cluster_key: job_cluster
           new_cluster:
-                spark_version: 14.3.x-scala2.12
-                node_type_id: i3.xlarge
+                spark_version: ${var.my_dbr_version}
+                node_type_id: ${var.my_node_type_id}
                 num_workers: 1        
       tasks:
         - task_key: generate_orders_snapshot
@@ -106,8 +112,8 @@ resources:
       job_clusters: 
         - job_cluster_key: job_cluster
           new_cluster:
-                spark_version: 13.3.x-scala2.12
-                node_type_id: i3.xlarge
+                spark_version: ${var.my_dbr_version}
+                node_type_id: ${var.my_node_type_id}
                 num_workers: 1
       tasks:
         - task_key: generate_orders_snapshot
