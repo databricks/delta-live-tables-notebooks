@@ -1,0 +1,24 @@
+resources:
+  pipelines:
+    dimensions:
+      name: dimensions
+      libraries:
+        - notebook:
+            path: ../src/2 Dimensions.sql
+      photon: true
+      channel: CURRENT
+      serverless: true
+      catalog: dbdemos
+      development: true
+      target: tpch_kimball
+    facts:
+      name: facts
+      libraries:
+        - notebook:
+            path: ../src/3 Facts.sql
+      photon: true
+      channel: CURRENT
+      serverless: true
+      catalog: dbdemos
+      development: true
+      target: tpch_kimball

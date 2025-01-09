@@ -1,0 +1,25 @@
+resources:
+  jobs:
+    kimball_modelling_demo:
+      name: Kimball Modelling Demo
+      tasks:
+        - task_key: Setup
+          notebook_task:
+            notebook_path: ../src/1 Setup.sql
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+        - task_key: Build_Dimensions
+          depends_on:
+            - task_key: Setup
+          run_if: ALL_SUCCESS
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.dimensions.id}
+        - task_key: Build_Facts
+          depends_on:
+            - task_key: Build_Dimensions
+          run_if: ALL_SUCCESS
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.facts.id}
+      queue:
+        enabled: true
+      max_concurrent_runs: 1
