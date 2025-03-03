@@ -1,1 +1,0 @@
-Op: string, dmsTimestamp: string, product_id: int, name: string, price: double

@@ -1,1 +1,0 @@
-Op: string, dmsTimestamp: string, transaction_id: int, transaction_date: timestamp, customer_id: string, product_id: string, store_id: string
