@@ -1,5 +1,5 @@
 -- Databricks notebook source
-CREATE LIVE TABLE gtb_scoring_train_data
+CREATE OR REFRESH MATERIALIZED VIEW gtb_scoring_train_data
 COMMENT "GBT ML scored training dataset based on Loan Risk"
 TBLPROPERTIES ("quality" = "gold")
 AS
@@ -12,11 +12,11 @@ SELECT *,
     "application_type", application_type, "loan_amnt", loan_amnt, "emp_length", emp_length, "annual_inc", annual_inc, "dti", dti, 
     "delinq_2yrs", delinq_2yrs, "revol_util", revol_util,"total_acc", total_acc, "credit_length_in_years", credit_length_in_years
   )) AS prediction 
-FROM live.train_data
+FROM train_data
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE gtb_scoring_valid_data
+CREATE OR REFRESH MATERIALIZED VIEW gtb_scoring_valid_data
 COMMENT "GBT ML scored valid dataset based on Loan Risk"
 TBLPROPERTIES ("quality" = "gold")
 AS
@@ -26,4 +26,4 @@ SELECT *,
     "application_type", application_type, "loan_amnt", loan_amnt, "emp_length", emp_length, "annual_inc", annual_inc, "dti", dti, 
     "delinq_2yrs", delinq_2yrs, "revol_util", revol_util,"total_acc", total_acc, "credit_length_in_years", credit_length_in_years
   )) AS prediction 
-FROM live.valid_data
+FROM valid_data
