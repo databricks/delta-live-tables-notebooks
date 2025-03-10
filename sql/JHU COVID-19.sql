@@ -22,6 +22,7 @@ CREATE OR REFRESH MATERIALIZED VIEW jhu_covid19_cleansed(
 )
 COMMENT "The cleansed Johns Hopkins COVID-19 dataset."
 TBLPROPERTIES ("quality" = "silver")
+AS
 SELECT get_json_object(_rescued_data, "$.FIPS") AS fips,
        get_json_object(_rescued_data, "$.Admin2") AS admin2,
        COALESCE(`Country/Region`, get_json_object(_rescued_data, "$.Country_Region")) AS country_region,
@@ -44,6 +45,7 @@ SELECT get_json_object(_rescued_data, "$.FIPS") AS fips,
 CREATE OR REFRESH MATERIALIZED VIEW jhu_covid19_wa
 COMMENT "The cleansed Johns Hopkins COVID-19 dataset for Washington State."
 TBLPROPERTIES ("quality" = "gold")
+AS
 SELECT fips,
        admin2,
        country_region,
