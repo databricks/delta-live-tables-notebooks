@@ -1,12 +1,12 @@
 -- Databricks notebook source
-CREATE LIVE TABLE lendingclub_raw
+CREATE OR REFRESH MATERIALIZED VIEW lendingclub_raw
 COMMENT "The raw loan risk dataset, ingested from /databricks-datasets."
 TBLPROPERTIES ("quality" = "bronze")
 AS SELECT * FROM parquet.`/databricks-datasets/samples/lending_club/parquet/`
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE lendingclub_clean(
+CREATE OR REFRESH MATERIALIZED VIEW lendingclub_clean(
   CONSTRAINT avg_cur_bal EXPECT (avg_cur_bal >= 0) ON VIOLATION DROP ROW
 )
 COMMENT "Loan risk dataset with cleaned-up datatypes / column names and quality expectations."
@@ -36,48 +36,48 @@ SELECT CASE
        delinq_2yrs,
        total_acc,
        avg_cur_bal
-  FROM live.lendingclub_raw
+  FROM lendingclub_raw
  WHERE loan_status IN ("Default", "Charged Off", "Fully Paid")  
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE summary_data
+CREATE OR REFRESH MATERIALIZED VIEW summary_data
 COMMENT "Loan risk summary dataset for analytics."
 TBLPROPERTIES ("quality" = "gold")
 AS
 SELECT grade, loan_amnt, annual_inc, dti, credit_length_in_years, addr_state, bad_loan, net
-  FROM live.lendingclub_clean
+  FROM lendingclub_clean
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE features
+CREATE OR REFRESH MATERIALIZED VIEW features
 COMMENT "Loan risk features dataset for training and validation datasets."
 TBLPROPERTIES ("quality" = "gold")
 AS
 SELECT term, home_ownership, purpose, addr_state, verification_status, application_type, loan_amnt, emp_length,
        annual_inc, dti, delinq_2yrs, revol_util, total_acc, credit_length_in_years, bad_loan, int_rate, net, issue_year
-  FROM live.lendingclub_clean
+  FROM lendingclub_clean
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE train_data
+CREATE OR REFRESH MATERIALIZED VIEW train_data
 COMMENT "ML training dataset based on Loan Risk data features."
 TBLPROPERTIES ("quality" = "gold")
 AS
 SELECT bad_loan, term, home_ownership, purpose, addr_state, verification_status, application_type, loan_amnt, emp_length, annual_inc, dti, delinq_2yrs, revol_util, 
        total_acc, credit_length_in_years, int_rate, net, issue_year
-  FROM live.features
+  FROM features
  WHERE issue_year <= 2015
 
 -- COMMAND ----------
 
-CREATE LIVE TABLE valid_data
+CREATE OR REFRESH MATERIALIZED VIEW valid_data
 COMMENT "ML validation dataset based on Loan Risk data features."
 TBLPROPERTIES ("quality" = "gold")
 AS
 SELECT bad_loan, term, home_ownership, purpose, addr_state, verification_status, application_type, loan_amnt, emp_length, annual_inc, dti, delinq_2yrs, revol_util, 
        total_acc, credit_length_in_years, int_rate, net, issue_year
-  FROM live.features
+  FROM features
  WHERE issue_year > 2015
 
 -- COMMAND ----------
