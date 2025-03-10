@@ -80,6 +80,5 @@ SELECT bad_loan, term, home_ownership, purpose, addr_state, verification_status,
   FROM features
  WHERE issue_year > 2015
 
--- COMMAND ----------
 
 
