@@ -7,7 +7,7 @@ CREATE OR REFRESH STREAMING TABLE jhu_covid19_raw
 COMMENT "The raw Johns Hopkins COVID-19 dataset, ingested from /databricks-datasets."
 TBLPROPERTIES ("quality" = "bronze")
 AS
-SELECT *, input_file_name() AS source_file_name 
+SELECT *, _metadata.file_name AS source_file_name 
   FROM STREAM read_files(
         "/databricks-datasets/COVID/CSSEGISandData/json/", 
         format => "json", 
