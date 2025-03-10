@@ -148,7 +148,7 @@ SELECT * FROM STREAM read_files(
 
 -- DBTITLE 1,Create Exploded Raw Station Information - Temp Bronze Table - DLT SQL
 -- Create temporary bronze station information table containing the exploded raw JSON and picking the desired fields.
-CREATE TEMPORARY OR REFRESH STREAMING TABLE exploded_raw_station_information
+CREATE OR REFRESH TEMPORARY STREAMING TABLE exploded_raw_station_information
 AS 
 SELECT 
   stations.station_id,
