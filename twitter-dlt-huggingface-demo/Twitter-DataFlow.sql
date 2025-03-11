@@ -19,20 +19,21 @@
 -- COMMAND ----------
 
 -- streaming ingest + schema inference with Auto Loader
-CREATE OR REFRESH STREAMING LIVE TABLE bronze
-AS SELECT * FROM cloud_files(
-  "dbfs:/data/twitter_dais2022", "json"
+CREATE OR REFRESH STREAMING TABLE bronze
+AS SELECT * FROM STREAM read_files(
+  "dbfs:/data/twitter_dais2022", 
+  format => "json"
 )
 
 -- COMMAND ----------
 
 -- constraints policies: track #badrecords/ drop record/ abort processing record 
-CREATE OR REFRESH STREAMING LIVE TABLE silver 
+CREATE OR REFRESH STREAMING TABLE silver 
 (CONSTRAINT valid_language EXPECT (lang == "en") ON VIOLATION DROP ROW,
 CONSTRAINT valid_id EXPECT (id != "") ON VIOLATION DROP ROW)
 COMMENT 'data is cleansed - other languages than EN are dropped'
 AS
-  SELECT id, geo, lang, text FROM STREAM (LIVE.bronze)
+  SELECT id, geo, lang, text FROM STREAM (bronze)
 
 -- COMMAND ----------
 
@@ -40,4 +41,4 @@ CREATE OR REFRESH STREAMING LIVE TABLE languages
 COMMENT 'table for statistics of different languages
 that showed up in the pipeline' 
 AS
-  SELECT lang, count(*)  AS count FROM STREAM (LIVE.bronze) GROUP BY lang ORDER BY count
+  SELECT lang, count(*)  AS count FROM STREAM (bronze) GROUP BY lang ORDER BY count
