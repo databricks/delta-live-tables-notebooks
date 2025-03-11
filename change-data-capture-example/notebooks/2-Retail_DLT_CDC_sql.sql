@@ -100,7 +100,7 @@
 -- COMMAND ----------
 
 -- MAGIC %md-sandbox
--- MAGIC ### Incremental data loading using Auto Loader (cloud_files)
+-- MAGIC ### Incremental data loading using Auto Loader (read_files)
 -- MAGIC <div style="float:right">
 -- MAGIC   <img width="700px" src="https://raw.githubusercontent.com/databricks/delta-live-tables-notebooks/main/change-data-capture-example/images/DLT_CDC.png"/>
 -- MAGIC </div>
@@ -116,8 +116,7 @@
 -- DBTITLE 1,Let's explore our incoming data - Bronze Table - Autoloader & DLT
 SET
   spark.source;
-CREATE
-  OR REFRESH STREAMING LIVE TABLE customer_bronze (
+CREATE OR REFRESH STREAMING TABLE customer_bronze (
     address string,
     email string,
     id string,
@@ -130,16 +129,16 @@ CREATE
 SELECT
   *
 FROM
-  cloud_files(
+  STREAM read_files(
     "${source}/customers",
-    "json",
-    map("cloudFiles.inferColumnTypes", "true")
+    format => "json",
+    inferColumnTypes => "true"
   );
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Silver Layer - Cleansed Table (Impose Constraints)
-CREATE OR REFRESH TEMPORARY STREAMING LIVE TABLE customer_bronze_clean_v(
+CREATE OR REFRESH TEMPORARY STREAMING TABLE customer_bronze_clean_v(
   CONSTRAINT valid_id EXPECT (id IS NOT NULL) ON VIOLATION DROP ROW,
   CONSTRAINT valid_address EXPECT (address IS NOT NULL),
   CONSTRAINT valid_operation EXPECT (operation IS NOT NULL) ON VIOLATION DROP ROW
@@ -147,7 +146,7 @@ CREATE OR REFRESH TEMPORARY STREAMING LIVE TABLE customer_bronze_clean_v(
 TBLPROPERTIES ("quality" = "silver")
 COMMENT "Cleansed bronze customer view (i.e. what will become Silver)"
 AS SELECT * 
-FROM STREAM(LIVE.customer_bronze);
+FROM STREAM(customer_bronze);
 
 -- COMMAND ----------
 
@@ -163,14 +162,14 @@ FROM STREAM(LIVE.customer_bronze);
 -- COMMAND ----------
 
 -- DBTITLE 1,Delete unwanted clients records - Silver Table - DLT SQL 
-CREATE OR REFRESH STREAMING LIVE TABLE customer_silver
+CREATE OR REFRESH STREAMING TABLE customer_silver
 TBLPROPERTIES ("quality" = "silver")
 COMMENT "Clean, merged customers";
 
 -- COMMAND ----------
 
-APPLY CHANGES INTO LIVE.customer_silver
-FROM stream(LIVE.customer_bronze_clean_v)
+APPLY CHANGES INTO customer_silver
+FROM stream(customer_bronze_clean_v)
   KEYS (id)
   APPLY AS DELETE WHEN operation = "DELETE"
   SEQUENCE BY operation_date --auto-incremental ID to identity order of events
