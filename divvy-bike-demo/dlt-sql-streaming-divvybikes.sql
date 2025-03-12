@@ -13,17 +13,21 @@ SET spark.databricks.cloudFiles.schemaInference.sampleSize.numFiles = 100000
 
 -- DBTITLE 1,Create Raw Station Status - Bronze Table - Auto Loader & DLT SQL
 -- Create the bronze station status table containing the raw JSON
-CREATE STREAMING LIVE TABLE raw_station_status
+CREATE OR REFRESH STREAMING TABLE raw_station_status
 COMMENT "The raw station status data, ingested from /FileStore/DivvyBikes/api_response/station_status."
 TBLPROPERTIES ("quality" = "bronze")
 AS
-SELECT * FROM cloud_files("/FileStore/DivvyBikes/api_response/station_status", "json", map("cloudFiles.inferColumnTypes", "true"));
+SELECT * FROM STREAM read_files(
+  "/FileStore/DivvyBikes/api_response/station_status", 
+  format => "json", 
+  inferColumnTypes => "true"
+  );
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Create Cleaned Station Status - Silver Table - DLT SQL
 -- Create the silver station status table by exploding on station and picking the desired fields.
-CREATE STREAMING LIVE TABLE cleaned_station_status (
+CREATE OR REFRESH STREAMING TABLE cleaned_station_status (
   CONSTRAINT valid_station_id EXPECT (station_id IS NOT NULL) ON VIOLATION DROP ROW,
   CONSTRAINT over_24hr_old_data EXPECT (secs_since_last_reported < 86400)
   )
@@ -53,14 +57,14 @@ FROM (
     EXPLODE(data.stations) AS stations,
     last_updated, 
     CAST(last_updated AS timestamp) AS last_updated_ts
-  FROM STREAM(LIVE.raw_station_status)
+  FROM STREAM(raw_station_status)
   );
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Create Raw Weather Information - Bronze Table - Auto Loader & DLT SQL
 -- Create the bronze weather info table containing the raw JSON
-CREATE STREAMING LIVE TABLE raw_weather_information
+CREATE OR REFRESH STREAMING TABLE raw_weather_information
 PARTITIONED BY (dt_date)
 COMMENT "The raw weather data, ingested from /FileStore/DivvyBikes/api_response/weather_info."
 TBLPROPERTIES ("quality" = "bronze")
@@ -68,15 +72,20 @@ AS
 SELECT 
   *,
   date(CAST(dt AS timestamp)) AS dt_date,
-  regexp_extract(input_file_name(),"(.*)_(.*).json", 2) AS station_id,
-  input_file_name() AS json_file_name
-FROM cloud_files("/FileStore/DivvyBikes/api_response/weather_info", "json", map("cloudFiles.inferColumnTypes", "true", "cloudFiles.useIncrementalListing", "false"));
+  regexp_extract(_metadata.file_name,"(.*)_(.*).json", 2) AS station_id,
+  _metadata.file_name AS json_file_name
+FROM STREAM read_files(
+  "/FileStore/DivvyBikes/api_response/weather_info", 
+  format => "json", 
+  inferColumnTypes => "true", 
+  useIncrementalListing => "false"
+  );
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Create Cleaned Weather Information - Silver Table - DLT SQL
 -- Create the silver weather info table.
-CREATE STREAMING LIVE TABLE cleaned_weather_information (
+CREATE OR REFRESH STREAMING TABLE cleaned_weather_information (
 CONSTRAINT valid_station_id EXPECT (station_id IS NOT NULL) 
 ON VIOLATION DROP ROW
 )
@@ -103,8 +112,8 @@ SELECT
   wind.deg AS wind_deg,
   wind.gust AS wind_gust,
   clouds.all AS clouds_add,
-  nvl(snow.1h,0) AS snow_1h,
-  nvl(rain.1h,0) AS rain_1h,
+  -- nvl(snow.1h,0) AS snow_1h,
+  -- nvl(rain.1h,0) AS rain_1h,
   json_file_name AS json_file_name,
   dt AS dt,
   CAST(dt AS timestamp) AS dt_ts,
@@ -119,23 +128,27 @@ SELECT
   id AS id,
   name AS name,
   cod AS cod
-FROM STREAM(LIVE.raw_weather_information);
+FROM STREAM(raw_weather_information);
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Create Raw Station Information - Bronze Table - Auto Loader & DLT SQL
 -- Create the bronze station information table containing the raw JSON
-CREATE STREAMING LIVE TABLE raw_station_information
+CREATE OR REFRESH STREAMING TABLE raw_station_information
 COMMENT "The raw station information data, ingested from /FileStore/DivvyBikes/api_response/station_information."
 TBLPROPERTIES ("quality" = "bronze")
 AS
-SELECT * FROM cloud_files("/FileStore/DivvyBikes/api_response/station_information", "json", map("cloudFiles.inferColumnTypes", "true"));
+SELECT * FROM STREAM read_files(
+  "/FileStore/DivvyBikes/api_response/station_information", 
+  format => "json", 
+  inferColumnTypes => "true"
+  );
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Create Exploded Raw Station Information - Temp Bronze Table - DLT SQL
 -- Create temporary bronze station information table containing the exploded raw JSON and picking the desired fields.
-CREATE TEMPORARY STREAMING LIVE TABLE exploded_raw_station_information
+CREATE OR REFRESH TEMPORARY STREAMING TABLE exploded_raw_station_information
 AS 
 SELECT 
   stations.station_id,
@@ -145,7 +158,7 @@ SELECT
   stations.station_type,
   stations.has_kiosk,
   stations.capacity,
-  stations.rack_model,      
+  -- stations.rack_model,      
   stations.eightd_has_key_dispenser,
   stations.electric_bike_surcharge_waiver,
   stations.lat,
@@ -159,14 +172,14 @@ SELECT
   EXPLODE(data.stations) AS stations,
   last_updated, 
   CAST(last_updated AS timestamp) AS last_updated_ts
-FROM STREAM(LIVE.raw_station_information)
+FROM STREAM(raw_station_information)
 );
 
 -- COMMAND ----------
 
 -- DBTITLE 1,Create Cleaned Station Information - Silver Table - DLT SQL
 -- Create the silver station information table.
-CREATE STREAMING LIVE TABLE cleaned_station_information
+CREATE OR REFRESH STREAMING TABLE cleaned_station_information
 COMMENT "The cleaned station information data."
 TBLPROPERTIES ("quality" = "silver"); 
 
@@ -174,6 +187,7 @@ TBLPROPERTIES ("quality" = "silver");
 
 -- DBTITLE 1,Merge (Upsert) Cleaned Station Information - Silver Table - DLT SQL
 -- Upsert/merge new stations into silver station information table.
-APPLY CHANGES INTO LIVE.cleaned_station_information FROM STREAM(LIVE.exploded_raw_station_information)
+APPLY CHANGES INTO cleaned_station_information 
+FROM STREAM(exploded_raw_station_information)
   KEYS (station_id)
   SEQUENCE BY last_updated;
